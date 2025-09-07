@@ -2,7 +2,7 @@ import { RedditThread, SubredditRules, SearchFilters } from "@/types/reddit";
 
 // Mock Reddit client for development
 export class RedditClient {
-  private isDevelopment = process.env.NODE_ENV === "development";
+  private isDevelopment = import.meta.env.DEV;
 
   async searchThreads(filters: SearchFilters): Promise<RedditThread[]> {
     if (this.isDevelopment) {
