@@ -10,9 +10,9 @@ interface AgentResponse {
 }
 
 export class AgentClient {
-  private isDevelopment = process.env.NODE_ENV === "development";
-  private apiKey = process.env.AGENT_API_KEY;
-  private endpoint = process.env.AGENT_ENDPOINT_URL;
+  private isDevelopment = import.meta.env.DEV;
+  private apiKey = import.meta.env.VITE_AGENT_API_KEY;
+  private endpoint = import.meta.env.VITE_AGENT_ENDPOINT_URL;
 
   async scoreAndDraft(
     thread: RedditThread, 
