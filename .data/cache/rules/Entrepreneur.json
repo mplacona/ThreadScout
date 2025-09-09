@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "linksAllowed": true,
+    "vendorDisclosureRequired": true,
+    "linkLimit": null,
+    "notes": [
+      "Vendor disclosure required",
+      "Vendor disclosure required",
+      "Text posts only"
+    ]
+  },
+  "cachedAt": 1757327323734
+}

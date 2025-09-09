@@ -1,0 +1,65 @@
+{
+  "sessionId": "scan_1757428000348_3n7n23jxg",
+  "createdAt": 1757428021915,
+  "threads": [
+    {
+      "thread": {
+        "id": "1nbzlel",
+        "sub": "linkedin",
+        "title": "Anyone think this is a scam?",
+        "author": "G33R_BoGgLeS",
+        "permalink": "/r/linkedin/comments/1nbzlel/anyone_think_this_is_a_scam/",
+        "createdUtc": 1757364902,
+        "upvotes": 2,
+        "comments": 2,
+        "body": "An unverified profile from someone who works for a talent and acquisitions firm reached out to me asking me about my profile which they said seemed to stand out to them.  Then they asked for a salary range, to which I asked their budget which was more than double the median salary of the position I would be qualified for.  I asked for the company name and job posting and they provided a job description within the linkedin message but no a link to it.  The company appears to be a smaller company located in Michigan, however the job listing apparently shows they are hiring in my small town where I currently reside in Maine.  I'm super skeptical but the profile has employment history, mainly in financial analytics (which is my skillset) and shows being employed by a talent firm for 2 years.  I'm skeptical on sending my resume until I can verify this person.  Another red flag is they are located in Tanzania and have a personal gmail account referenced on their cover photo on the profile.  \n\nI'm new to this Linkedin thing and don't want to start throwing resumes at a bunch of frauds and not realizing it.",
+        "topComments": [
+          {
+            "author": "MoustacheRide400",
+            "body": "Can they/did they send you an email from the company email? If it’s in town can you ask for an in person interview? If you are interested, what kind of info are they asking from you?\n\nYou could push this a little and if it is a scam it will become apparent very quickly",
+            "score": 1,
+            "createdUtc": 1757381641
+          },
+          {
+            "author": "BitterStatus9",
+            "body": "Run away. Go with your gut. Use common sense. Assume it's a scam unless you can verify - ON YOUR OWN, OUTSIDE OF LINKEDIN - that it is legit. Then question it some more.",
+            "score": 0,
+            "createdUtc": 1757370046
+          }
+        ]
+      },
+      "score": 20,
+      "whyFit": "The thread shows genuine confusion about a potential scam, offering a chance to provide safety advice but little commercial relevance.",
+      "rules": {
+        "linksAllowed": true,
+        "vendorDisclosureRequired": false,
+        "linkLimit": null,
+        "notes": []
+      },
+      "risks": [
+        "Possibility of a phishing or recruitment scam",
+        "Sharing personal salary info with an unverified party",
+        "Potential identity theft if personal data is provided",
+        "Time wasted on bogus opportunities"
+      ],
+      "variantA": {
+        "text": "It’s wise to be cautious. Here are three concrete steps you can take to verify the recruiter before sharing any details:\n\n1. **Ask for official company contact information** – request a corporate email address (e.g., @company.com) and a phone number. Call the main line listed on the company’s website to confirm the recruiter’s affiliation.\n2. **Search for the job posting yourself** – look up the exact job title on the company’s Careers page or reputable job boards. If the listing can’t be found, that’s a red flag.\n3. **Check the recruiter’s LinkedIn history** – examine the profile for consistency (e.g., a realistic timeline, mutual connections, endorsements). A profile with a personal Gmail address, a location that doesn’t match the company, or very few connections is suspicious.\n\nIf any of these checks fail, it’s safest to walk away. Trust your gut and protect your personal information."
+      },
+      "variantB": {
+        "text": "It’s wise to be cautious. Here are three concrete steps you can take to verify the recruiter before sharing any details:\n\n1. **Ask for official company contact information** – request a corporate email address (e.g., @company.com) and a phone number. Call the main line listed on the company’s website to confirm the recruiter’s affiliation.\n2. **Search for the job posting yourself** – look up the exact job title on the company’s Careers page or reputable job boards. If the listing can’t be found, that’s a red flag.\n3. **Check the recruiter’s LinkedIn history** – examine the profile for consistency (e.g., a realistic timeline, mutual connections, endorsements). A profile with a personal Gmail address, a location that doesn’t match the company, or very few connections is suspicious.\n\nFor a detailed checklist, see LinkedIn’s official guide on verifying recruiters: https://www.linkedin.com/help/linkedin/answer/54475",
+        "disclosure": ""
+      }
+    }
+  ],
+  "scanParams": {
+    "subs": [
+      "linkintips",
+      "linkedin"
+    ],
+    "keywords": [
+      "analytics"
+    ],
+    "lookbackHours": 24,
+    "allowlist": []
+  }
+}
