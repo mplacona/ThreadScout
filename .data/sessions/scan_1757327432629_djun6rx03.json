@@ -1,0 +1,18 @@
+{
+  "sessionId": "scan_1757327432629_djun6rx03",
+  "createdAt": 1757327432629,
+  "threads": [],
+  "scanParams": {
+    "subs": [
+      "saas"
+    ],
+    "keywords": [
+      "Share your Projects"
+    ],
+    "lookbackHours": 24,
+    "allowlist": [
+      "example.com",
+      "docs.example.com"
+    ]
+  }
+}

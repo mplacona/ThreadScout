@@ -1,0 +1,67 @@
+{
+  "sessionId": "scan_1757327323936_dwb3sshuv",
+  "createdAt": 1757327323936,
+  "threads": [
+    {
+      "thread": {
+        "id": "1nasi0e",
+        "sub": "Entrepreneur",
+        "title": "Why We're Busier Than Ever, automation is everywhere nowadays",
+        "author": "FrequentBid2476",
+        "permalink": "/r/Entrepreneur/comments/1nasi0e/why_were_busier_than_ever_automation_is/",
+        "createdUtc": 1757249801,
+        "upvotes": 2,
+        "comments": 2,
+        "body": "I've been doing a lot of thinking about how we got here. It's September 2025, and every business meeting I attend feels like a tech showcase. Someone is always demonstrating the latest AI tool that will change our workflow or showing off an automation that promises to free up our time. Yet somehow, I am working longer hours than I did five years ago. \n\nWe are overwhelmed by productivity tools that aren't making us more productive. My dashboard has seventeen different AI assistants, each one meant to make my life easier. Instead, I spend half my morning checking what each one accomplished overnight and fixing their mistakes from when I was sleeping. \n\nThe irony isn't lost on me. We automated customer service, but now we need people to manage the chatbots. We used AI-driven analytics, but someone still has to understand what the algorithms are really telling us. We streamlined our processes with smart workflows, but those workflows break down every time something unexpected happens. \n\nEveryone is riding the AI wave because they're afraid of being left behind. Companies are spending money on any solution with \"AI-powered\" in the name, not because it solves a real problem but because their competitors are doing it too. We've created a strange arms race where the goal isn’t efficiency; it’s looking innovative. \n\nThe human element feels more important than ever, exactly because we’ve tried so hard to eliminate it. The most successful businesses I’ve seen aren’t the ones with the most automation. They’re the ones that find the right balance between using technology and maintaining the unique value of human intuition, creativity, and genuine connection.",
+        "topComments": [
+          {
+            "author": "AutoModerator",
+            "body": "Welcome to /r/Entrepreneur and thank you for the post, /u/FrequentBid2476! Please make sure you read our [community rules](https://www.reddit.com/r/Entrepreneur/about/rules/) before participating here. As a quick refresher:  \n\n* Promotion of products and services is not allowed here. This includes dropping URLs, asking users to DM you, check your profile, job-seeking, and investor-seeking. *Unsanctioned promotion of any kind will lead to a permanent ban for all of your accounts.* \n* AI and GPT-g"
+          },
+          {
+            "author": "wink2Galacto",
+            "body": "Very much, but I think companies and individuals still achieve more. It’s just at a faster pace. \n\nI noticed a similar thing when I transitioned from a traditional limited setting to a highly streamlined setting. The person that works 8 hrs a day and ships 200,000 boxes with all the newly invented methods is still more likely to have a burnout than the person working 10 hours a day and shipping 5,000 boxes the traditional method until the newly invented method is normalised. \n\nAutomation doesn’t"
+          }
+        ]
+      },
+      "score": 44,
+      "whyFit": "Thread shows moderate engagement and relevant topic discussion",
+      "rules": {
+        "linksAllowed": true,
+        "vendorDisclosureRequired": true,
+        "linkLimit": null,
+        "notes": [
+          "Vendor disclosure required",
+          "Vendor disclosure required",
+          "Text posts only"
+        ]
+      },
+      "risks": [],
+      "variantA": {
+        "text": "I've run into similar challenges before. Here are some approaches that have worked: 1. Start by documenting exactly what you're trying to achieve and what's currently happening instead 2. Break down the problem into smaller, testable pieces that you can validate individually 3. Check if there are any recent changes or updates that might have affected the behavior Hope this helps point you in the right direction!"
+      },
+      "variantB": {
+        "text": "I've run into similar challenges before. Here are some approaches: 1. Start by documenting exactly what you're trying to achieve 2. Break down the problem into smaller, testable pieces 3. This guide might also be useful: https://example.com/guides - it covers some similar scenarios Hope this helps point you in the right direction!\n\nI work on example",
+        "disclosure": "I work on example"
+      }
+    }
+  ],
+  "scanParams": {
+    "subs": [
+      "startups",
+      "entrepreneur",
+      "smallbusiness"
+    ],
+    "keywords": [
+      "help",
+      "problem",
+      "stuck",
+      "linkedin analytics"
+    ],
+    "lookbackHours": 24,
+    "allowlist": [
+      "example.com",
+      "docs.example.com"
+    ]
+  }
+}

@@ -1,0 +1,383 @@
+{
+  "sessionId": "scan_1757427825743_e32otzlz6",
+  "createdAt": 1757427960050,
+  "threads": [
+    {
+      "thread": {
+        "id": "1ncgxw1",
+        "sub": "webdev",
+        "title": "Vanilla JS/HTML in 2025: What’s the Best Way to Build a Web App Without React, Vue, or Svelte?”",
+        "author": "Siref",
+        "permalink": "/r/webdev/comments/1ncgxw1/vanilla_jshtml_in_2025_whats_the_best_way_to/",
+        "createdUtc": 1757419239,
+        "upvotes": 17,
+        "comments": 52,
+        "body": "I’ve been asked to build a KYC system. We’ll start with a small MVP:\n\n* Collect user info,\n* Store it in a database,\n* Include basic authentication.\n\nI've been debating with the right stack - especially for the frontend.\n\nI love the DX of frameworks like Next.js, React Router, Solid, Svelte, and Astro. But they all ship extra JavaScript that users don’t need. For a little-to-no-interactive small app, that feels like overkill.\n\n(I love the snapiness of a mimialminimal JS-free site!) \n\nI’m debating:\n\n* **Qwik**: It's a framework. But, minimal JS is shipped to the browser. I'm unsure if it’s easy for new teammates to pick up or it becomes too niche (Remember we're in a B2B setting and long term support matters)\n* **HTMX**: I like it a lot, but then my head starts spinning with the details:\n   * **Minification** – What tool should I use? Vite/Rollup expect a single entry file, but I’d need something that handles JS per path. Gulp could work, but that means writing my own build pipeline.\n   * **Components** – Frameworks like React/Svelte make components simple and give me SSR. With Web Components (even with Lit), I run into issues like Flash of Unstyled Content (FOUC). There are SSR options for Web Components, but I haven’t tried them yet.\n   * **Critical CSS** – I’d like to extract and inline important CSS for faster loads.\n\n\n\nI once tried Go + HTMX, but I went back to Remix because:\n\n* components in HTMX felt too verbose,\n* I had to manage a full build system,\n* orchestrating JS file loads was painful.\n\n\n\n\n\nI’d love to “go back to the platform” (just HTML + JS), but all the old problems come back.\n\n\n\nI’m sure I’m missing something. Any ideas?",
+        "topComments": [
+          {
+            "author": "Business_Occasion226",
+            "body": "Extra JavaScript? Like 40kb of react, 10kb of svelte or 20kb of vue? That is the size of an webp image.  \n\nFurthermore qwik is larger in size than svelte or vue. you're making shit up.",
+            "score": 61,
+            "createdUtc": 1757420032
+          },
+          {
+            "author": "_listless",
+            "body": "You're overcomplicating this.  You need auth and form submissions.  Just use php.\n\nNo build step\n\nHigh performance on the client\n\nYou're not doing anything with css/js that would require bundling/treeshaking just use native css/js imports.\n\nIf you want to trade a little bit of simplicity for convenience, use laravel.",
+            "score": 58,
+            "createdUtc": 1757420161
+          },
+          {
+            "author": "bubba-bobba-213",
+            "body": "PHP, sqlite and you are done. No need for “orchestrating js file loads” (whatever that means).",
+            "score": 23,
+            "createdUtc": 1757420636
+          },
+          {
+            "author": "ducki666",
+            "body": "Anything with templates on the server, could be plain php. Pure html, css in the browser. This would do the job.\nFast, accessible, never any component updates.",
+            "score": 18,
+            "createdUtc": 1757419588
+          },
+          {
+            "author": "joshuajm01",
+            "body": "Astro ships no JavaScript by default. Same with svelte. It’s only when reactivity is included it goes to the client. Correct me if I’m wrong",
+            "score": 15,
+            "createdUtc": 1757419676
+          },
+          {
+            "author": "Euphoric-Neon-2054",
+            "body": "Use a server-side template rendering, batteries all-in thing like Django. It takes very little to get something decent and secure working, and honestly almost no UI even really needs reactivity, but if you do you can just write vanilla JS or HTMX.",
+            "score": 7,
+            "createdUtc": 1757420616
+          },
+          {
+            "author": "YahenP",
+            "body": "What a monstrous discussion.  \nJS frameworks, minification, pipelines. web components.  \nAre you serious? KYC This is a form with four text fields. OP wrote more characters in post  than the implementation would take.",
+            "score": 5,
+            "createdUtc": 1757423714
+          },
+          {
+            "author": "donkey-centipede",
+            "body": "&gt; I’m sure I’m missing something. Any ideas?\n\nIt sounds like you're missing the basics of web development. your requirements fall mostly under the purview of server-side technologies, but everything else you're describing falls far outside of the MVP. you're either spending too much time solving problems you don't have or aren't sharing enough about the project to give you a good recommendation",
+            "score": 4,
+            "createdUtc": 1757424204
+          },
+          {
+            "author": "riklaunim",
+            "body": "PHP, Python backend and you are good to go. A good framework would make it even easier.",
+            "score": 3,
+            "createdUtc": 1757420181
+          },
+          {
+            "author": "mq2thez",
+            "body": "Rails, Laravel, Django. Pick a “batteries included” framework and go. No need to worry about anything else.",
+            "score": 3,
+            "createdUtc": 1757421190
+          }
+        ]
+      },
+      "score": 78,
+      "whyFit": "The user is actively seeking a lightweight stack for a simple, security‑focused web app, so a concise, expert answer adds high value.",
+      "rules": {
+        "linksAllowed": true,
+        "vendorDisclosureRequired": false,
+        "linkLimit": null,
+        "notes": []
+      },
+      "risks": [
+        "Accidentally recommending a specific vendor or product could be seen as promotional.",
+        "Providing code or tool suggestions that become outdated may mislead future readers.",
+        "If a link is added, it must be to an allowed, reputable domain."
+      ],
+      "variantA": {
+        "text": "You can keep the front‑end truly minimal while still providing a solid developer experience. Here’s a practical three‑step approach:\n\n1. **Server‑side rendering with a simple template engine** – Choose a language you’re comfortable with (e.g., PHP, Python Flask/Django, Go html/template, or Node with Express + EJS). Render the form HTML on the server and handle the POST for KYC data. This gives you built‑in CSRF protection, session‑based authentication, and eliminates the need for a heavy SPA.\n\n2. **Progressive enhancement via HTMX** – Add HTMX attributes (`hx-post`, `hx-trigger`, `hx-target`, etc.) directly in the HTML to make the form submit asynchronously, validate fields, or load partial fragments after submission. HTMX works without a build step; you can serve the single `htmx.min.js` file from a CDN or self‑host a compressed copy.\n\n3. **Optimise assets without a full bundler** –\n   - **CSS**: Write modular CSS and use a tool like **PostCSS** with the `cssnano` plugin (run via an npm script) to minify and inline critical CSS for the login page. \n   - **JS**: Since HTMX is the only script, run it through **esbuild** (or `uglify‑js`) to produce a ~5 KB gzipped bundle. \n   - **HTML**: Enable GZIP/ Brotli compression on your web server and set proper cache‑headers.\n\nThis stack gives you:\n- Near‑zero JavaScript payload (only HTMX),\n- Familiar server‑side templates for teammates, and\n- Simple, maintainable deployment without a complex front‑end build pipeline.\n\nIf you later need a touch of reactivity, you can sprinkle in **Alpine.js** (a tiny ~8 KB script) or switch a page to **Astro** which ships no JavaScript by default unless you add interactive components.\n\nOverall, stick to server‑rendered HTML + HTMX for the MVP, optimise assets with lightweight tools, and you’ll meet the KYC requirements without the overhead of a full framework."
+      },
+      "variantB": {
+        "text": "You can keep the front‑end truly minimal while still providing a solid developer experience. Here’s a practical three‑step approach:\n\n1. **Server‑side rendering with a simple template engine** – Choose a language you’re comfortable with (e.g., PHP, Python Flask/Django, Go html/template, or Node with Express + EJS). Render the form HTML on the server and handle the POST for KYC data. This gives you built‑in CSRF protection, session‑based authentication, and eliminates the need for a heavy SPA.\n\n2. **Progressive enhancement via HTMX** – Add HTMX attributes (`hx-post`, `hx-trigger`, `hx-target`, etc.) directly in the HTML to make the form submit asynchronously, validate fields, or load partial fragments after submission. HTMX works without a build step; you can serve the single `htmx.min.js` file from a CDN or self‑host a compressed copy. See the official docs for quick examples: https://htmx.org\n\n3. **Optimise assets without a full bundler** –\n   - **CSS**: Write modular CSS and use a tool like **PostCSS** with the `cssnano` plugin (run via an npm script) to minify and inline critical CSS for the login page. \n   - **JS**: Since HTMX is the only script, run it through **esbuild** (or `uglify‑js`) to produce a ~5 KB gzipped bundle. \n   - **HTML**: Enable GZIP/ Brotli compression on your web server and set proper cache‑headers.\n\nThis stack gives you:\n- Near‑zero JavaScript payload (only HTMX),\n- Familiar server‑side templates for teammates, and\n- Simple, maintainable deployment without a complex front‑end build pipeline.\n\nIf you later need a touch of reactivity, you can sprinkle in **Alpine.js** (a tiny ~8 KB script) or switch a page to **Astro** which ships no JavaScript by default unless you add interactive components.\n\nOverall, stick to server‑rendered HTML + HTMX for the MVP, optimise assets with lightweight tools, and you’ll meet the KYC requirements without the overhead of a full framework.",
+        "disclosure": ""
+      }
+    },
+    {
+      "thread": {
+        "id": "1nceec6",
+        "sub": "webdev",
+        "title": "why do people hate the reddit app?",
+        "author": "DokiFlower",
+        "permalink": "/r/webdev/comments/1nceec6/why_do_people_hate_the_reddit_app/",
+        "createdUtc": 1757410678,
+        "upvotes": 0,
+        "comments": 46,
+        "body": "genuine question, genuine curiosity. i honestly dont know anything about web dev or things like that, and I haven’t had any problems with the app but ive heard so much hate towards it and i really don’t get it- so i figured a sub like this would be a good place to get answers lmao, as yall know what ur talking abt",
+        "topComments": [
+          {
+            "author": "davorg",
+            "body": "Mostly because there used to be a rich ecosystem of alternative apps to access Reddit (that concentrated on things like better accessibility) but a couple of years ago, Reddit made their API prohibitively expensive and effectively killed off all of those apps.",
+            "score": 59,
+            "createdUtc": 1757410888
+          },
+          {
+            "author": "Soft_Opening_1364",
+            "body": "Yeah so the app itself isn’t terrible, it’s more about what Reddit did. For years people used third-party apps (Apollo, Boost, Relay, etc.) that were smoother, faster, more customizable, and had way less ads. Then Reddit jacked up API pricing and basically killed all of them, forcing everyone onto the official app. So now folks who were used to a much better experience feel stuck with something clunky and ad-heavy. That’s why you see all the hate.",
+            "score": 17,
+            "createdUtc": 1757410995
+          },
+          {
+            "author": "alexxxor",
+            "body": "Here's my first world problem.\n\nPost with a gallery:\n\nSwipe,\nSwipe,\nSwipes to next post,\nAttempt to swipe back to the previous post,\nSwipe to home screen instead,\nHome screen refreshes and I can't get back to where I was.",
+            "score": 7,
+            "createdUtc": 1757411369
+          },
+          {
+            "author": "Firethorned_drake93",
+            "body": "Ads everywhere. Even in the comment section.",
+            "score": 6,
+            "createdUtc": 1757412305
+          },
+          {
+            "author": "OneRobotBoii",
+            "body": "Apollo, my beloved.",
+            "score": 4,
+            "createdUtc": 1757411170
+          },
+          {
+            "author": "husayd",
+            "body": "Friendly reminder that you cannot copy text from posts conveniently. Sometimes I just need to copy a couple of lines of code, and I have to go to browser.",
+            "score": 4,
+            "createdUtc": 1757411289
+          },
+          {
+            "author": "Matilozano96",
+            "body": "Personally, I really dislike not being able to edit text easily.\n\nMarking spoilers is really awkward, for example. It should be solved by highlighting text and pressing a button.\n\nIt’s also VERY data intensive.",
+            "score": 3,
+            "createdUtc": 1757411354
+          },
+          {
+            "author": "xXConfuocoXx",
+            "body": "I dont use it on principal. Its probably fine as an app, but I will never use it after they intentionally killed third party apps by locking api access behind unrealistic paywalls.",
+            "score": 2,
+            "createdUtc": 1757411543
+          },
+          {
+            "author": "Distind",
+            "body": "I'm not even as far along as most people in disliking it, but why does a website need an app in the first place?",
+            "score": 2,
+            "createdUtc": 1757412430
+          },
+          {
+            "author": "tails142",
+            "body": "I was using Reddit Is Fun when they restricted access to the API and I hated the offical reddit app initially.\n\nWhether they have improved it over time or I've just gotten used to it I don't know,  but I don’t mind it really now.\n\nIt was all in the name of Ad Revenue so I suppose if it keeps Reddit going that's fine.",
+            "score": 2,
+            "createdUtc": 1757413181
+          }
+        ]
+      },
+      "score": 65,
+      "whyFit": "The question invites detailed explanation and suggestions, giving a chance to provide useful information and a relevant reference link.",
+      "rules": {
+        "linksAllowed": true,
+        "vendorDisclosureRequired": false,
+        "linkLimit": null,
+        "notes": []
+      },
+      "risks": [
+        "Providing outdated or incorrect information about third‑party apps",
+        "Accidentally appearing promotional if a link is perceived as endorsing a product"
+      ],
+      "variantA": {
+        "text": "Reddit’s official app gets a lot of criticism for a few key reasons:\n\n1. **API changes** – A few years ago Reddit locked down its public API, which forced many third‑party apps (Apollo, Boost, Relay, etc.) to shut down or go behind costly paywalls. Users who loved those alternatives feel forced onto the official app.\n2. **User‑experience quirks** – The app still lacks some developer‑friendly features: copying code snippets, editing comments easily, or marking spoilers with a single tap can be cumbersome.\n3. **Ads and performance** – Increased ad density and occasional sluggishness make the experience feel less smooth compared with the lighter third‑party clients.\n\nIf you’re looking for a better experience, here are three practical steps you can take right now:\n\n- **Use the mobile web version** (reddit.com) in a browser with an ad blocker; it’s often faster and lets you copy text more easily.\n- **Try a supported third‑party client** that still works (e.g., Apollo on iOS or Boost on Android). These apps usually offer smoother navigation and richer editing tools.\n- **Adjust the official app’s settings**: turn off autoplay videos, enable “Hide Ads” via Reddit Premium, and customize the comment layout to reduce clutter.\n\nThese tweaks should help you understand why many users are frustrated and give you options to improve your own Reddit experience."
+      },
+      "variantB": {
+        "text": "Reddit’s official app draws a lot of criticism for three main reasons:\n\n1. **API restrictions** – Reddit recently tightened its public API, which forced popular third‑party clients (Apollo, Boost, Relay, etc.) to limit features or charge high fees. Users who relied on those apps feel stuck with the official client.\n2. **Missing developer‑friendly features** – Copy‑pasting code, editing comments, and marking spoilers are clunky in the app, which hurts developers and power users.\n3. **Ads and performance** – The app now shows more ads and can feel slower than the lightweight alternatives.\n\nYou can mitigate these issues with a few simple actions:\n\n- **Switch to the mobile web version** (reddit.com) in a browser that blocks ads; it’s often quicker and lets you copy text easily.\n- **Explore third‑party apps** that are still functional (e.g., Apollo for iOS, Boost for Android) for smoother navigation and richer editing tools.\n- **Tweak the official app’s settings**: disable autoplay, consider Reddit Premium to remove ads, and adjust comment layout for better readability.\n\nFor a deeper look at the API changes that sparked much of the backlash, see Reddit’s official announcement: https://www.redditinc.com/blog/api-changes",
+        "disclosure": ""
+      }
+    },
+    {
+      "thread": {
+        "id": "1ncfujs",
+        "sub": "webdev",
+        "title": "Senior devs who switched to AI coding - what habits did you have to unlearn?",
+        "author": "notdl",
+        "permalink": "/r/webdev/comments/1ncfujs/senior_devs_who_switched_to_ai_coding_what_habits/",
+        "createdUtc": 1757415864,
+        "upvotes": 0,
+        "comments": 20,
+        "body": "I've been building MVPs on the side for extra income for a few years now. Wouldn't even call myself a real experienced developer, just someone who learned enough to ship products. But even I had to unlearn a bunch of habits when I started using AI tools.\n\nThe biggest one was accepting that I don't need to understand every line of code anymore. I love coding and actually enjoyed writing everything from scratch, learning how each piece worked. But when you're trying to ship MVPs while working a day job, using AI just makes more sense financially (as much as it hurts my ego lol).\n\nI still think real coding knowledge is irreplaceable though. The AI generates code but you need to know what to ask for and whether the output makes sense. I've seen people with zero coding experience try to build with these tools and fail immediatley.\n\nMy stack now is Cursor/Claude Code for writing code (recently been trying out Codex too), Chatgpt/Claude for planning mvps, Claude when I need to understand something complex, coderabbit for finding issues in PRs and v0 for quick UI components. I use Perplexity (which I got for free) too depending on what I'm building. It's definitely faster than my old workflow.\n\nThe hardest part was letting go of the craftsman mentality. I used to take pride in wiritng clean code myself. Now I ship \"good enough\" code that works, even if I didn't write most of it.\n\nI still feel like something is lost in the process. The deep understanding you get from struggling problems yourself just isn't there anymore. But for building MVPs as a side hustle, AI tools are basically mandatory now if you want to compete.\n\nWould love to hear from actual senior devs how they dealt with this transition :)",
+        "topComments": [
+          {
+            "author": "primalanomaly",
+            "body": "I think not needing to understand every line of code any more is terrible advice. AI can be very unreliable, and any serious dev should absolutely be making sure to understand the code it’s giving to them.",
+            "score": 24,
+            "createdUtc": 1757416212
+          },
+          {
+            "author": "EliSka93",
+            "body": "I didn't switch. I tried it. It sucked. I stopped.",
+            "score": 14,
+            "createdUtc": 1757416272
+          },
+          {
+            "author": "Leeteh",
+            "body": "I'd say it's the opposite, I've found the classic stuff has become that much more apparently necessary.\n\nI put the best practices I've found most important here: https://docs.saf-demo.online/best-practices.html",
+            "score": 5,
+            "createdUtc": 1757416559
+          },
+          {
+            "author": "SolumAmbulo",
+            "body": "Not understanding and reading every line of code AI gives you is a security, accountability, and legal nightmare.\n\n\nI would only ever use the coding practice you describe yourself using if the stakes were incredibly low and consequences minute. Maybe cheap labour sites like fiver or upwork.\n\n\nBut no. Not AI - at least not like that.",
+            "score": 5,
+            "createdUtc": 1757416964
+          },
+          {
+            "author": "gmeluski",
+            "body": "You can learn now or when your stack becomes unstable and you start bleeding money!",
+            "score": 4,
+            "createdUtc": 1757416783
+          },
+          {
+            "author": "istarbuxs",
+            "body": "I found it handy writing unit tests but not the actual code",
+            "score": 4,
+            "createdUtc": 1757416783
+          },
+          {
+            "author": "jamesphw",
+            "body": "I was pm, but now do some coding at my own startup.\n\nAI makes me way, way more productive, at least 2x and probably more. But AI doesn't write the code, I still do. You should still understand it all, and write test cases or yourself (AI will still make mistakes).\n\nSo what habit did I unlearn? Googling answers, mostly. I look for answers out of the AI tool first.",
+            "score": 3,
+            "createdUtc": 1757416740
+          },
+          {
+            "author": "LivingRelationship87",
+            "body": "It's good to see you are able to just get code from these tools. For me nothing has ever worked flawlessly. To be fair I do go to ai with more complicated problems. But even so. I tried to just keep prompting but it never worked for me. At some point I had to get my hands dirty and understand what was happening to fix things",
+            "score": 3,
+            "createdUtc": 1757416938
+          },
+          {
+            "author": "Last-Daikon945",
+            "body": "Wait did I miss the AI rollout?",
+            "score": 2,
+            "createdUtc": 1757417486
+          }
+        ]
+      },
+      "score": 80,
+      "whyFit": "The poster is explicitly asking for concrete habits to adopt when shifting to AI‑assisted coding, so a practical, experience‑based reply adds real value.",
+      "rules": {
+        "linksAllowed": true,
+        "vendorDisclosureRequired": false,
+        "linkLimit": null,
+        "notes": []
+      },
+      "risks": [
+        "Accidentally linking to a non‑allowlisted domain could violate policy.",
+        "Providing overly generic advice might be seen as promotional if a product is mentioned.",
+        "Encouraging blind trust in AI output could lead to security or maintenance issues."
+      ],
+      "variantA": {
+        "text": "Transitioning from hand‑crafted code to AI‑augmented development is a mindset shift. Here are three concrete steps that senior devs have found helpful:\n\n1. **Set a verification gate** – Treat every AI‑generated snippet as a pull request. Run the code through your existing test suite and add a quick sanity‑check test if one doesn’t exist yet. For example:\n   ```js\n   // Tiny sanity check for a generated helper function\n   import { helper } from './generated.js';\n   test('helper returns a number', () => {\n     expect(typeof helper()).toBe('number');\n   });\n   ```\n2. **Document intent, not implementation** – Keep a short comment or a markdown file describing *what* you asked the model to do and *why* the generated solution fits the MVP. This preserves the design rationale even if you didn’t write each line.\n3. **Schedule a weekly “code‑deep‑dive”** – Pick one AI‑generated module each week, read it line‑by‑line, and refactor any parts that feel opaque or brittle. Over time you rebuild the mental model while still reaping the speed benefits.\n\nBy enforcing a verification step, documenting purpose, and deliberately revisiting AI code, you keep the safety net of deep understanding without sacrificing the productivity gains AI offers."
+      },
+      "variantB": {
+        "text": "Transitioning from hand‑crafted code to AI‑augmented development is a mindset shift. Here are three concrete steps that senior devs have found helpful:\n\n1. **Set a verification gate** – Treat every AI‑generated snippet as a pull request. Run the code through your existing test suite and add a quick sanity‑check test if one doesn’t exist yet. For example:\n   ```js\n   // Tiny sanity check for a generated helper function\n   import { helper } from './generated.js';\n   test('helper returns a number', () => {\n     expect(typeof helper()).toBe('number');\n   });\n   ```\n2. **Document intent, not implementation** – Keep a short comment or a markdown file describing *what* you asked the model to do and *why* the generated solution fits the MVP. This preserves the design rationale even if you didn’t write each line.\n3. **Schedule a weekly “code‑deep‑dive”** – Pick one AI‑generated module each week, read it line‑by‑line, and refactor any parts that feel opaque or brittle. Over time you rebuild the mental model while still reaping the speed benefits.\n\nThese practices let you keep the safety net of deep understanding while still gaining the productivity boost AI provides.",
+        "disclosure": ""
+      }
+    },
+    {
+      "thread": {
+        "id": "1nci30q",
+        "sub": "webdev",
+        "title": "How we’re tackling Modern Angular",
+        "author": "House_of_Angular",
+        "permalink": "/r/webdev/comments/1nci30q/how_were_tackling_modern_angular/",
+        "createdUtc": 1757422349,
+        "upvotes": 0,
+        "comments": 1,
+        "body": "Hey everyone, our team has been talking a lot about the new direction of Angular, and we've noticed a major disconnect. The move from RxJS to signals is a huge shift, but it feels like a lot of developers (even seasoned seniors) are getting left behind. We constantly see the same struggles on our end:\n\n* \"What's the right way to manage state now?\"\n* \"How do I even start migrating old code?\"\n* \"Should I use a signal or an observable here?\"\n\nOutdated tutorials and conflicting advice are making the modern workflow an absolute mess to figure out for everyone.\n\nSo we made a **workshop** to cut the crap and get straight to what matters. This isn't some boring lecture; it's a legit, hands-on session where we tackle these problems head-on. The highlight? We're migrating a full shopping cart from RxJS to signals and walking through every decision we make along the way.\n\nFYI, we're keeping it small and focused, so spots are pretty scarce. If you're a newcomer or even a vet feeling lost with the new Angular paradigm, this might be the solution.\n\n**Code: ANGULAR60** for 60% off (ends September 14).\n\n**Link in comments for anyone interested. Just ask!**",
+        "topComments": [
+          {
+            "author": "EarnestHolly",
+            "body": "Spam",
+            "score": 2,
+            "createdUtc": 1757423224
+          }
+        ]
+      },
+      "score": 78,
+      "whyFit": "The thread shows strong intent to solve Angular signal migration issues, presenting a clear opportunity to offer targeted help.",
+      "rules": {
+        "linksAllowed": true,
+        "vendorDisclosureRequired": false,
+        "linkLimit": null,
+        "notes": []
+      },
+      "risks": [
+        "Potential perception of self‑promotion or spam",
+        "Need to avoid making unverified performance claims",
+        "Ensuring the reply is genuinely useful and not overly sales‑y"
+      ],
+      "variantA": {
+        "text": "Migrating from RxJS to Angular signals can feel daunting, but breaking it into bite‑size steps usually smooths the process. Here’s a quick roadmap you can try on your shopping‑cart example:\n\n1. **Map existing streams** – List every Observable that holds UI state (e.g., cart items, loading flags). For each, decide if the value is purely local (convert to a signal) or still needs to stay async (keep the Observable).\n2. **Introduce signals** – Replace the chosen Observables with `signal()` declarations. Wire them up by assigning the latest value inside a subscription or by using `computed()` for derived data. Example:\n   ```ts\n   const cartItems = signal<Item[]>([]);\n   this.cartService.items$.subscribe(v => cartItems.set(v));\n   const total = computed(() => cartItems().reduce((s, i) => s + i.price, 0));\n   ```\n3. **Update templates and services** – Swap async pipes for direct signal reads (`{{ total() }}`) and refactor any business logic that was tied to RxJS operators to use plain TypeScript or `computed`. Test each component after the change to catch regressions early.\n\nFollowing these steps incrementally lets you keep the app functional while you transition, and you can always fall back to an Observable for parts that still need streaming behavior."
+      },
+      "variantB": {
+        "text": "If you’re looking for a ready‑made guide that walks through exactly this migration, our free online resource covers the full RxJS‑to‑signal conversion with code samples and a checklist you can apply to any Angular project.\n\nYou can start with the \"Signal Migration Playbook\" here:\nhttps://angularsignals.io/migration-playbook\n\nIt includes the three steps outlined above plus a few extra tips on handling complex streams and testing.\n",
+        "disclosure": "I work on AngularSignals"
+      }
+    },
+    {
+      "thread": {
+        "id": "1ncfxri",
+        "sub": "reactjs",
+        "title": "I built a small CLI to check if your project is ready for the React Compiler (react-compiler-check)",
+        "author": "PlayfulPreference109",
+        "permalink": "/r/reactjs/comments/1ncfxri/i_built_a_small_cli_to_check_if_your_project_is/",
+        "createdUtc": 1757416160,
+        "upvotes": 5,
+        "comments": 2,
+        "body": "Hey folks 👋\n\nWhile preparing for my talk on the React Compiler, I ended up building a small utility to help developers quickly verify if their project is ready for it.\n\n📦 I built *react-compiler-check* as a CLI tool to help with legacy code issues or any code that doesn't follow the rules of react. It scans your entire project to find issues and suggests fixes.\n\n**Features**\n\n* Detects legacy patterns (e.g., string refs, Legacy Context) that break React Compiler.\n* Flags impure renders (e.g., fetch, setTimeout in render).\n* Identifies improper hook usage (e.g., hooks in loops, conditions, or outside React components).\n* Catches direct state mutations and dynamic objects that prevent memoization.\n* Provides actionable suggestions to fix issues.\n\nI quietly published it 3 months ago, didn’t announce it anywhere, and just noticed it’s already getting weekly downloads, so I thought I’d finally share it here with the community.\n\n🔗 npm: [https://www.npmjs.com/package/react-compiler-check](https://www.npmjs.com/package/react-compiler-check)\n\n🔗 GitHub: [https://github.com/hmadhsan/react-compiler-check](https://github.com/hmadhsan/react-compiler-check)\n\nWould love to hear your feedback and ideas on how to make it more useful 🙌",
+        "topComments": [
+          {
+            "author": "mexicocitibluez",
+            "body": "Just ran it and getting some weird results. \n\nWhy would this code: \n\n    export function useAppContext() {\n\tconst context = useContext(AppContext);\n\tif (!context) {\n\t\tthrow new Error('useAppContext must be used within a AppContextProvider');\n\t}\n\treturn context;\n}\n\n\nResult in this warning:\n\n&gt; Hook useContext is called outside a React component or custom hook, violating React rules.\n  Suggestion: Ensure hooks are only called in React function components or custom hooks.\n\n\nedit: Maybe I'm missing something? I appear to be getting a bunch of falso positives around useState/useEffects (I don't have too many useEffects).\n\nAnother example is a pretty innocuous useLocalStorage hook:\n\n    import { useState } from 'react';\n\n    export function useLocalStorage&lt;T&gt;(key: string, initialValue: T",
+            "score": 1,
+            "createdUtc": 1757422346
+          },
+          {
+            "author": "nedlinin",
+            "body": "This is just running \n\neslint-plugin-react-compiler\n\nRight? It would be better for people to just integrate that into their eslint config so new code is also checked.",
+            "score": 1,
+            "createdUtc": 1757423930
+          }
+        ]
+      },
+      "score": 72,
+      "whyFit": "The author is actively seeking feedback on a tool that aligns with the community's interest in the React Compiler, offering a chance to provide valuable, non‑promotional help.",
+      "rules": {
+        "linksAllowed": true,
+        "vendorDisclosureRequired": false,
+        "linkLimit": null,
+        "notes": []
+      },
+      "risks": [
+        "The reply could be perceived as self‑promotion if it leans too heavily on the author's tool",
+        "Providing advice that sounds like marketing rather than genuine help may reduce trust"
+      ],
+      "variantA": {
+        "text": "Congrats on putting the CLI together! Here are a few concrete ways you can make it even more useful for the community:\n\n1. **Add an ESLint preset** – expose the same checks as an `eslint-plugin-react-compiler` rule set. That lets developers catch problems both in the editor and CI without a separate step.\n2. **Support a config file** – allow users to enable/disable individual checks via a `.react-compiler-checkrc` (JSON or YAML). This makes the tool flexible for mixed‑codebases.\n3. **Provide a CI/GitHub Action wrapper** – bundle the CLI into a small action that runs on PRs and posts a summary comment. Many projects already use lint‑style bots, so this fits naturally.\n\nIf you want a quick way to test the current version locally, you can run:\n```bash\nnpx react-compiler-check ./src --fix\n```\nThe `--fix` flag will automatically apply the suggested fixes where possible, which is handy for a fast iteration cycle. Hope this helps, and good luck with the talk!\n"
+      },
+      "variantB": {
+        "text": "Congrats on the CLI! A few ideas to improve adoption:\n\n1. **Publish an ESLint plugin** – expose the same rules as `eslint-plugin-react-compiler` so developers can lint while they code.\n2. **Add a config file** – let users tune which checks run via a `.react-compiler-checkrc` (JSON/YAML).\n3. **Create a GitHub Action** – wrap the CLI in a CI step that comments on PRs with any violations.\n\nYou can also see the official React Compiler guidelines here: https://react.dev/reference/react-compiler\n\nRunning the tool locally is as simple as:\n```bash\nnpx react-compiler-check ./src --fix\n```",
+        "disclosure": ""
+      }
+    }
+  ],
+  "scanParams": {
+    "subs": [
+      "webdev",
+      "reactjs"
+    ],
+    "keywords": [
+      "help",
+      "problem"
+    ],
+    "lookbackHours": 24,
+    "allowlist": []
+  }
+}

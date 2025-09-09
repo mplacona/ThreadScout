@@ -1,0 +1,15 @@
+{
+  "sessionId": "scan_1757427984780_qu6lscxoa",
+  "createdAt": 1757427985411,
+  "threads": [],
+  "scanParams": {
+    "subs": [
+      "linkintips"
+    ],
+    "keywords": [
+      "analytics"
+    ],
+    "lookbackHours": 24,
+    "allowlist": []
+  }
+}
