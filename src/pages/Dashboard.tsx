@@ -9,15 +9,16 @@ import { Separator } from '@/components/ui/separator';
 import { Search, TrendingUp, MessageCircle, ThumbsUp, ExternalLink, X, Eye, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, type ScanRequest, type ThreadSummary, type StreamingScanEvent } from '@/lib/api';
+import { FormattedText } from '@/components/ui/formatted-text';
 
 const POPULAR_SUBREDDITS = [
   'webdev', 'reactjs', 'javascript', 'programming', 'webdesign',
-  'startups', 'entrepreneur', 'smallbusiness', 'marketing', 'seo'
+  'startups', 'entrepreneur', 'smallbusiness', 'marketing', 'seo', 'linkedin', 'linkedinads', 'linkedintips'
 ];
 
 const COMMON_KEYWORDS = [
   'help', 'problem', 'stuck', 'how to', 'best way', 'recommendations',
-  'tool', 'solution', 'advice', 'experience', 'struggling'
+  'tool', 'solution', 'advice', 'experience', 'struggling', 'analytics'
 ];
 
 export default function Dashboard() {
@@ -35,9 +36,9 @@ export default function Dashboard() {
   const [expandedResponses, setExpandedResponses] = useState<Set<string>>(new Set());
 
   // Form state
-  const [selectedSubs, setSelectedSubs] = useState<string[]>(['webdev', 'reactjs']);
+  const [selectedSubs, setSelectedSubs] = useState<string[]>(['linkedin', 'linkedinads', 'linkedintips']);
   const [customSub, setCustomSub] = useState('');
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>(['help', 'problem']);
+  const [selectedKeywords, setSelectedKeywords] = useState<string[]>(['help', 'analytics']);
   const [customKeyword, setCustomKeyword] = useState('');
   const [lookbackHours, setLookbackHours] = useState(24);
   const [threadLimit, setThreadLimit] = useState(5);
@@ -205,11 +206,30 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">ThreadScout Dashboard</h1>
-        <p className="text-muted-foreground">
+      {/* Logo and Brand Header */}
+      <div className="mb-8 text-center">
+        <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/logo.svg" 
+              alt="ThreadScout Logo" 
+              className="h-12 w-12"
+            />
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                ThreadScout
+              </h1>
+            </div>
+          </div>
+        </div>
+        <p className="text-lg text-muted-foreground mb-6">
           Find high-intent Reddit threads where your product can help
         </p>
+      </div>
+
+      {/* Dashboard Content */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold mb-2">Dashboard</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -499,9 +519,9 @@ export default function Dashboard() {
                                 <Copy className="h-3 w-3" />
                               </Button>
                             </div>
-                            <div className="text-sm bg-white p-3 rounded border whitespace-pre-wrap">
+                            <FormattedText className="text-sm bg-white p-3 rounded border">
                               {thread.variantA.text}
-                            </div>
+                            </FormattedText>
                           </div>
 
                           <div>
@@ -517,9 +537,9 @@ export default function Dashboard() {
                                 <Copy className="h-3 w-3" />
                               </Button>
                             </div>
-                            <div className="text-sm bg-white p-3 rounded border whitespace-pre-wrap">
+                            <FormattedText className="text-sm bg-white p-3 rounded border">
                               {thread.variantB.text}
-                            </div>
+                            </FormattedText>
                             {thread.variantB.disclosure && (
                               <div className="text-xs text-muted-foreground mt-1 italic">
                                 Disclosure: {thread.variantB.disclosure}

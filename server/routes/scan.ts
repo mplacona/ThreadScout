@@ -48,12 +48,22 @@ app.post(
       const analyses: ThreadAnalysis[] = [];
       
       console.log(`🤖 Processing ${topCandidates.length} candidates with agent`);
+      console.log(`📊 AGENT REQUEST TRACKING: Will process ${topCandidates.length} threads, expecting ${topCandidates.length} agent requests`);
+      let agentRequestCount = 0;
 
       if (topCandidates.length === 0) {
         console.log(`⚠️  No candidates found - scan will return empty results`);
       }
 
-      for (const candidate of topCandidates) {
+      for (let i = 0; i < topCandidates.length; i++) {
+        const candidate = topCandidates[i];
+        
+        // Add delay between requests to avoid rate limiting (except for first request)
+        if (i > 0) {
+          console.log(`⏱️  Adding 2s delay before processing thread ${i + 1} to avoid rate limits`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
         try {
           // Get subreddit rules
           const rules = await rulesCache.getRules(candidate.sub);
@@ -65,6 +75,9 @@ app.post(
           console.log(`🤖 Calling agent with thread: ${fullThread.title.slice(0, 50)}... (${fullThread.topComments.length} comments)`);
           
           // Get AI analysis and drafts
+          agentRequestCount++;
+          console.log(`📈 Making agent request ${agentRequestCount}/${topCandidates.length} for thread: ${fullThread.id}`);
+          
           const agentResponse = await agentClient.scoreAndDraft(
             fullThread,
             rules,
@@ -73,6 +86,11 @@ app.post(
           );
           
           console.log(`🎯 Agent scored thread ${fullThread.id}: ${agentResponse.score}/100 - ${agentResponse.whyFit}`);
+          
+          // DEBUG: Log raw agent response variants
+          console.log('🔍 DEBUG - Raw Agent Response Variants:');
+          console.log('Variant A:', JSON.stringify(agentResponse.variantA, null, 2));
+          console.log('Variant B:', JSON.stringify(agentResponse.variantB, null, 2));
 
           // Validate and clean variant A
           const variantAOneLink = enforceOneLink(agentResponse.variantA.text);
@@ -94,6 +112,12 @@ app.post(
             }
             variantBCleaned = ensureDisclosure(variantBCleaned, variantBDisclosure);
           }
+          
+          // DEBUG: Log processed variants
+          console.log('🔧 DEBUG - After Processing:');
+          console.log('Variant A (cleaned):', JSON.stringify(variantAAllowlist.cleaned, null, 2));
+          console.log('Variant B (cleaned):', JSON.stringify(variantBCleaned, null, 2));
+          console.log('Variant B (disclosure):', JSON.stringify(variantBDisclosure, null, 2));
 
           const analysis: ThreadAnalysis = {
             thread: fullThread,
@@ -149,6 +173,7 @@ app.post(
         })),
       };
 
+      console.log(`📊 AGENT REQUEST SUMMARY: Made ${agentRequestCount} agent requests for ${analyses.length} successful threads`);
       return c.json(response);
     } catch (error) {
       console.error('Scan error:', error);

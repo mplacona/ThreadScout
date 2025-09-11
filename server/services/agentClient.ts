@@ -78,7 +78,16 @@ export class AgentClient {
       return agentResponse;
     } catch (error: unknown) {
       console.error('Agent client error:', error);
-      return this.getMockResponse(thread, rules, allowlist);
+      
+      // Check if it's a rate limit error
+      if (error instanceof Error && error.message.includes('429')) {
+        console.log('🚦 Rate limit detected - throwing error instead of using mock');
+        throw new Error('Rate limit exceeded - please try again in a moment');
+      }
+      
+      // For other errors, still throw instead of using mock
+      console.log('❌ Agent API failed - throwing error instead of using mock');
+      throw error;
     }
   }
 
@@ -253,7 +262,30 @@ Hope this helps point you in the right direction!`;
   }
 
   private generateVariantB(thread: FullThread, linksAllowed: boolean, allowlist: string[]): { text: string; disclosure?: string } {
-    if (!linksAllowed || allowlist.length === 0) {
+    if (!linksAllowed) {
+      // When links aren't allowed, make variant B similar but slightly different
+      const isQuestion = thread.title.includes('?');
+      
+      const text = isQuestion
+        ? `Here are some approaches that might help with your question:
+
+1. Check for any error messages or logs that could provide more specific details about the issue
+2. Review the official documentation for similar examples or troubleshooting steps  
+3. Try creating a minimal test case to isolate the specific component that's not working as expected
+
+Feel free to ask if you need more clarification on any of these approaches!`
+        : `I've encountered similar challenges before. Here are some strategies that have been effective:
+
+1. Document exactly what you're trying to accomplish and what's currently happening instead
+2. Break the problem down into smaller, testable components that you can validate individually
+3. Check if any recent changes or updates might have affected the current behavior
+
+Hope this helps guide you in the right direction!`;
+      
+      return { text };
+    }
+    
+    if (allowlist.length === 0) {
       return {
         text: this.generateVariantA(thread),
       };

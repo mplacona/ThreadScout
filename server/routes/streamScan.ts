@@ -124,10 +124,19 @@ async function scanWithStreaming(
     const topCandidates = candidates.slice(0, maxThreads);
     const analyses: ThreadAnalysis[] = [];
     
+    console.log(`📊 AGENT REQUEST TRACKING: Will process ${topCandidates.length} threads, expecting ${topCandidates.length} agent requests`);
+    let agentRequestCount = 0;
+    
     for (let i = 0; i < topCandidates.length; i++) {
       if (scanControl.cancelled) {
         controller.enqueue(`data: ${JSON.stringify({ type: 'cancelled' })}\n\n`);
         break;
+      }
+
+      // Add delay between requests to avoid rate limiting (except for first request)
+      if (i > 0) {
+        console.log(`⏱️  Adding 2s delay before processing thread ${i + 1} to avoid rate limits`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
       const candidate = topCandidates[i];
@@ -148,12 +157,20 @@ async function scanWithStreaming(
         const fullThread = await redditClient.getThread(candidate.permalink);
         
         // Get AI analysis and drafts
+        agentRequestCount++;
+        console.log(`📈 Making agent request ${agentRequestCount}/${topCandidates.length} for thread: ${fullThread.id}`);
+        
         const agentResponse = await agentClient.scoreAndDraft(
           fullThread,
           rules,
           '', // docsContext
           allowlist
         );
+        
+        // DEBUG: Log raw agent response variants
+        console.log('🔍 DEBUG - Raw Agent Response Variants for thread:', fullThread.id);
+        console.log('Variant A:', JSON.stringify(agentResponse.variantA, null, 2));
+        console.log('Variant B:', JSON.stringify(agentResponse.variantB, null, 2));
 
         // Validate and clean variants (same logic as original scan)
         const variantAOneLink = enforceOneLink(agentResponse.variantA.text);
@@ -172,6 +189,12 @@ async function scanWithStreaming(
           }
           variantBCleaned = ensureDisclosure(variantBCleaned, variantBDisclosure);
         }
+        
+        // DEBUG: Log processed variants
+        console.log('🔧 DEBUG - After Processing for thread:', fullThread.id);
+        console.log('Variant A (cleaned):', JSON.stringify(variantAAllowlist.cleaned, null, 2));
+        console.log('Variant B (cleaned):', JSON.stringify(variantBCleaned, null, 2));
+        console.log('Variant B (disclosure):', JSON.stringify(variantBDisclosure, null, 2));
 
         const analysis: ThreadAnalysis = {
           thread: fullThread,
@@ -229,6 +252,8 @@ async function scanWithStreaming(
     await storage.writeJSON(StorageKeys.session(sessionId), sessionData);
 
     // Send completion
+    console.log(`📊 AGENT REQUEST SUMMARY: Made ${agentRequestCount} agent requests for ${analyses.length} successful threads`);
+    
     if (scanControl.cancelled) {
       controller.enqueue(`data: ${JSON.stringify({
         type: 'completed',
