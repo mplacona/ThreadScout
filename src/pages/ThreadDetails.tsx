@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Copy, ExternalLink, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RedditThread, OpportunityScore, ReplyDraft, SubredditRules } from "@/types/reddit";
+import { FormattedText } from "@/components/ui/formatted-text";
 import { redditClient } from "@/lib/reddit-client";
 import { agentClient } from "@/lib/agent-client";
 
@@ -251,11 +252,9 @@ export default function ThreadDetails() {
                 <p className="text-sm text-muted-foreground">Helpful response with no links</p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Textarea
-                  value={draft.variant_a.text}
-                  readOnly
-                  className="min-h-32 resize-none"
-                />
+                <FormattedText className="min-h-32 p-3 border rounded-md bg-muted/50">
+                  {draft.variant_a.text}
+                </FormattedText>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{draft.variant_a.text.length} characters</span>
                   <Button
@@ -280,11 +279,9 @@ export default function ThreadDetails() {
                 <p className="text-sm text-muted-foreground">Helpful response with relevant link and disclosure</p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Textarea
-                  value={draft.variant_b.text}
-                  readOnly
-                  className="min-h-32 resize-none"
-                />
+                <FormattedText className="min-h-32 p-3 border rounded-md bg-muted/50">
+                  {draft.variant_b.text}
+                </FormattedText>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground">Links Found</Label>
                   {draft.variant_b.links.length > 0 ? (

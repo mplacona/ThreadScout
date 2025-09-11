@@ -28,11 +28,12 @@ export function enforceOneLink(text: string): LinkValidationResult {
   
   // Remove all other links
   for (let i = 1; i < links.length; i++) {
-    cleaned = cleaned.replace(links[i], '');
+    // Remove link and clean up surrounding punctuation/spaces
+    cleaned = cleaned.replace(new RegExp(`\\s*${links[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'g'), ' ');
   }
 
-  // Clean up any double spaces or formatting issues
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  // Clean up any double spaces but preserve line breaks
+  cleaned = cleaned.replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
   
   return {
     ok: false,
@@ -77,17 +78,19 @@ export function enforceAllowlist(text: string, allowlist: string[] = []): Allowl
 
       if (!isAllowed) {
         violations.push(domain);
-        cleaned = cleaned.replace(link, '');
+        // Remove link and clean up surrounding punctuation/spaces
+        cleaned = cleaned.replace(new RegExp(`\\s*${link.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'g'), ' ');
       }
     } catch (error) {
       // Invalid URL, remove it
       violations.push(link);
-      cleaned = cleaned.replace(link, '');
+      // Remove link and clean up surrounding punctuation/spaces
+      cleaned = cleaned.replace(new RegExp(`\\s*${link.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'g'), ' ');
     }
   }
 
-  // Clean up formatting after removing links
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  // Clean up formatting after removing links but preserve line breaks
+  cleaned = cleaned.replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
 
   return {
     ok: violations.length === 0,
