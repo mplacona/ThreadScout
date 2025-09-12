@@ -2,6 +2,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 // import { cors } from 'hono/cors';
 
 // Import route handlers
@@ -52,6 +55,33 @@ app.route('/api', outcomesRoutes);
 app.route('/api', toolsRoutes);
 app.route('/api', subredditsRoutes);
 
+// Serve static files from dist directory
+app.use('/assets/*', serveStatic({ root: './dist' }));
+app.use('/favicon.ico', serveStatic({ path: './dist/favicon.ico' }));
+app.use('/logo.svg', serveStatic({ path: './dist/logo.svg' }));
+app.use('/placeholder.svg', serveStatic({ path: './dist/placeholder.svg' }));
+app.use('/robots.txt', serveStatic({ path: './dist/robots.txt' }));
+app.use('/favicons/*', serveStatic({ root: './dist' }));
+
+// Serve React app for all non-API routes (SPA fallback)
+app.get('*', (c) => {
+  const path = c.req.path;
+  
+  // Skip API routes
+  if (path.startsWith('/api/')) {
+    return c.json({ error: 'API endpoint not found' }, 404);
+  }
+  
+  try {
+    // Serve the React app's index.html for all other routes
+    const html = readFileSync(join(process.cwd(), 'dist', 'index.html'), 'utf-8');
+    return c.html(html);
+  } catch (error) {
+    console.error('Error serving index.html:', error);
+    return c.text('Frontend not found. Make sure to run "npm run build" first.', 404);
+  }
+});
+
 // Error handling middleware
 app.onError((err, c) => {
   console.error('Server error:', err);
@@ -60,11 +90,6 @@ app.onError((err, c) => {
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   }, 500);
-});
-
-// 404 handler
-app.notFound((c) => {
-  return c.json({ error: 'Not found' }, 404);
 });
 
 const port = parseInt(process.env.PORT || '8080');
