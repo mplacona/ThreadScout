@@ -31,9 +31,9 @@ ThreadScout is a Reddit thread discovery and analysis tool with a React frontend
 
 ### Backend Structure (server/)
 - **Framework**: Hono with Node.js adapter
-- **Routes**: `/api/scan`, `/api/threads`, `/api/outcomes`, `/api/tools`, `/api/stream-scan`
+- **Routes**: `/api/scan`, `/api/scan/stream`, `/api/threads`, `/api/threads/recent`, `/api/outcomes`, `/api/tools`, `/api/subreddits/search`
 - **Storage Abstraction**: Auto-selects between DigitalOcean Spaces (production) or local JSON (development)
-- **Services**: Reddit client, agent client, validators, rules cache
+- **Services**: Reddit client, agent client, validators, rules cache, subreddit search
 - **Schemas**: Zod validation for threads, outcomes, drafts
 
 ### Storage System
@@ -49,20 +49,50 @@ Storage keys follow patterns:
 
 ### Environment Configuration
 Copy `.env.example` to `.env`. The app gracefully degrades:
-- **No Reddit creds**: Uses public JSON endpoints
-- **No Agent creds**: Uses mock responses
-- **No Spaces creds**: Uses local storage
+
+- **No Reddit creds**: Uses public JSON endpoints (limited rate limits)
+- **No Agent creds**: Throws error instead of mock responses (agent required for scoring)
+- **No Spaces creds**: Uses local storage in `./.data/` directory
 - **Feature flags**: `FEATURE_AGENT_TOOLS`, `SAFE_MODE`
 
 ### API Integration Points
 - **Reddit**: OAuth or public endpoints via `server/services/redditClient.ts`
-- **Agent**: Gradient AI or mock responses via `server/services/agentClient.ts`
+  - Thread search with keyword filtering and time limits
+  - Subreddit search with subscriber counts and public-only filtering
+  - Rules fetching with intelligent parsing for link policies
+- **Agent**: Gradient AI integration via `server/services/agentClient.ts`
+  - Sends Reddit thread JSON URLs directly to agent
+  - Robust JSON parsing with error recovery for malformed responses
+  - No fallback to mock responses (agent required for functionality)
 - **Validation**: Link allowlist and disclosure rules enforced server-side
 
 ### Frontend-Backend Communication
 - Frontend uses TanStack Query for API calls
 - Vite dev proxy forwards `/api/*` to backend on port 3000
 - CORS configured for development origins
+- Real-time streaming scan updates via Server-Sent Events (SSE)
+
+## Key Features
+
+### Subreddit Autocomplete
+- **Component**: `src/components/ui/subreddit-autocomplete.tsx`
+- **Real-time search**: Fetches live subreddit data from Reddit's public API
+- **Subscriber display**: Shows formatted subscriber counts (397K subs, 2M subs)
+- **Filtering**: Only returns public subreddits
+- **Caching**: Client and server-side caching (5-minute duration)
+- **Fallback**: Graceful degradation to popular subreddits list
+
+### Thread Analysis & Scoring
+- **Score-based sorting**: Threads automatically sorted by AI score (highest first)
+- **Score hints**: Auto-generated hints based on score ranges (Excellent fit, Good opportunity, etc.)
+- **Streaming scans**: Real-time progress updates with cancellation support
+- **Robust parsing**: Handles malformed JSON from AI agent with multiple recovery strategies
+
+### Text Formatting
+- **Component**: `src/components/ui/formatted-text.tsx`
+- **Escape handling**: Converts `\\n` sequences to proper line breaks
+- **Markdown support**: Basic **bold**, *italic*, and `code` formatting
+- **Preserved formatting**: Maintains original spacing and structure
 
 ## Key Development Patterns
 
