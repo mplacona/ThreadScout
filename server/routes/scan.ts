@@ -80,9 +80,7 @@ app.post(
           
           const agentResponse = await agentClient.scoreAndDraft(
             fullThread,
-            rules,
-            '', // docsContext - could be populated from config
-            effectiveAllowlist
+            rules
           );
           
           console.log(`🎯 Agent scored thread ${fullThread.id}: ${agentResponse.score}/100 - ${agentResponse.whyFit}`);
@@ -119,9 +117,16 @@ app.post(
           console.log('Variant B (cleaned):', JSON.stringify(variantBCleaned, null, 2));
           console.log('Variant B (disclosure):', JSON.stringify(variantBDisclosure, null, 2));
 
+          // Generate scoreHint based on score since agent doesn't provide it
+          const scoreHint = agentResponse.score >= 80 ? 'Excellent fit for engagement' :
+                           agentResponse.score >= 60 ? 'Good opportunity to engage' :
+                           agentResponse.score >= 40 ? 'Moderate fit - consider context' :
+                           'Lower priority thread';
+
           const analysis: ThreadAnalysis = {
             thread: fullThread,
             score: agentResponse.score,
+            scoreHint,
             whyFit: agentResponse.whyFit,
             rules,
             risks: agentResponse.risks,
@@ -159,12 +164,16 @@ app.post(
 
       await storage.writeJSON(StorageKeys.session(finalSessionId), sessionData);
 
+      // Sort threads by score (highest to lowest)
+      const sortedAnalyses = [...analyses].sort((a, b) => b.score - a.score);
+
       // Return response
       const response = {
         sessionId: finalSessionId,
-        threads: analyses.map(analysis => ({
+        threads: sortedAnalyses.map(analysis => ({
           thread: analysis.thread,
           score: analysis.score,
+          scoreHint: analysis.scoreHint,
           whyFit: analysis.whyFit,
           rules: analysis.rules,
           risks: analysis.risks,

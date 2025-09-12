@@ -11,8 +11,11 @@ interface FormattedTextProps {
  */
 export function FormattedText({ children, className = '' }: FormattedTextProps) {
   const formatText = (text: string) => {
+    // Unescape literal \n sequences that may come from agent responses
+    const unescapedText = text.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+    
     // Split by line breaks to preserve them
-    const lines = text.split('\n');
+    const lines = unescapedText.split('\n');
     
     return lines.map((line, lineIndex) => {
       const parts: React.ReactNode[] = [];

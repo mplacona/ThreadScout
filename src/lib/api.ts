@@ -28,6 +28,7 @@ export interface ThreadSummary {
     }>;
   };
   score: number;
+  scoreHint: string;
   whyFit: string;
   rules: {
     linksAllowed: boolean;
@@ -66,6 +67,19 @@ export interface CreateOutcomeRequest {
   threadId: string;
   commentUrl: string;
   sessionId: string;
+}
+
+export interface RecentSession {
+  sessionId: string;
+  createdAt: number;
+  threadsCount: number;
+  scanParams: {
+    subs: string[];
+    keywords: string[];
+    lookbackHours: number;
+    allowlist: string[];
+  };
+  topScore: number;
 }
 
 export interface StreamingScanEvent {
@@ -166,19 +180,26 @@ export class ThreadScoutAPI {
       throw new Error('No response body');
     }
 
+    let buffer = '';
+    
     try {
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) break;
         
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        // Add new chunk to buffer
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process complete lines
+        const lines = buffer.split('\n');
+        // Keep the last line in buffer (might be incomplete)
+        buffer = lines.pop() || '';
         
         for (const line of lines) {
           if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data.trim()) {
+            const data = line.slice(6).trim();
+            if (data) {
               try {
                 const event = JSON.parse(data);
                 onEvent(event);
@@ -186,10 +207,13 @@ export class ThreadScoutAPI {
                 if (event.type === 'completed' || event.type === 'cancelled') {
                   return;
                 } else if (event.type === 'error') {
-                  throw new Error(event.details || event.error);
+                  // Only throw for fatal errors, not individual thread errors
+                  if (event.error && !event.message) {
+                    throw new Error(event.details || event.error);
+                  }
                 }
-              } catch (error) {
-                console.error('Failed to parse streaming data:', error);
+              } catch (parseError) {
+                console.error('Failed to parse streaming data:', parseError, 'Raw data:', data);
               }
             }
           }
@@ -210,6 +234,10 @@ export class ThreadScoutAPI {
     );
   }
 
+  async getRecentSessions(): Promise<RecentSession[]> {
+    return this.request<RecentSession[]>('/threads/recent');
+  }
+
   async createOutcome(request: CreateOutcomeRequest): Promise<{ success: boolean }> {
     return this.request<{ success: boolean }>('/outcomes', {
       method: 'POST',
@@ -219,6 +247,13 @@ export class ThreadScoutAPI {
 
   async healthCheck(): Promise<{ status: string; timestamp: number; version: string }> {
     return this.request<{ status: string; timestamp: number; version: string }>('/health');
+  }
+
+  async searchSubreddits(query: string, limit: number = 10): Promise<Array<{name: string, subscribers: number, displayName: string}>> {
+    const response = await this.request<{ subreddits: Array<{name: string, subscribers: number, displayName: string}> }>(
+      `/subreddits/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    );
+    return response.subreddits;
   }
 }
 
