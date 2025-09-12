@@ -29,6 +29,7 @@ export const RulesSummarySchema = z.object({
 export const ThreadAnalysisSchema = z.object({
   thread: FullThreadSchema,
   score: z.number().min(0).max(100),
+  scoreHint: z.string(),
   whyFit: z.string(),
   rules: RulesSummarySchema,
   risks: z.array(z.string()),

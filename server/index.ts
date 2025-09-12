@@ -10,6 +10,7 @@ import streamScanRoutes from './routes/streamScan.js';
 import threadsRoutes from './routes/threads.js';
 import outcomesRoutes from './routes/outcomes.js';
 import toolsRoutes from './routes/tools.js';
+import subredditsRoutes from './routes/subreddits.js';
 
 const app = new Hono();
 
@@ -49,6 +50,7 @@ app.route('/api', streamScanRoutes);
 app.route('/api', threadsRoutes);
 app.route('/api', outcomesRoutes);
 app.route('/api', toolsRoutes);
+app.route('/api', subredditsRoutes);
 
 // Error handling middleware
 app.onError((err, c) => {

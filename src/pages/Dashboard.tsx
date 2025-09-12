@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Search, TrendingUp, MessageCircle, ThumbsUp, ExternalLink, X, Eye, Copy } from 'lucide-react';
+import { Search, TrendingUp, MessageCircle, ThumbsUp, ExternalLink, X, Eye, Copy, Clock, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api, type ScanRequest, type ThreadSummary, type StreamingScanEvent } from '@/lib/api';
+import { api, type ScanRequest, type ThreadSummary, type StreamingScanEvent, type RecentSession } from '@/lib/api';
 import { FormattedText } from '@/components/ui/formatted-text';
+import { SubredditAutocomplete } from '@/components/ui/subreddit-autocomplete';
 
-const POPULAR_SUBREDDITS = [
-  'webdev', 'reactjs', 'javascript', 'programming', 'webdesign',
-  'startups', 'entrepreneur', 'smallbusiness', 'marketing', 'seo', 'linkedin', 'linkedinads', 'linkedintips'
-];
 
 const COMMON_KEYWORDS = [
   'help', 'problem', 'stuck', 'how to', 'best way', 'recommendations',
@@ -22,9 +18,11 @@ const COMMON_KEYWORDS = [
 ];
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<{ sessionId: string; threads: ThreadSummary[] } | null>(null);
+  
+  // Recent sessions state (localStorage-based)
+  const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
   
   // Streaming scan state
   const [scanStatus, setScanStatus] = useState<string>('');
@@ -37,27 +35,106 @@ export default function Dashboard() {
 
   // Form state
   const [selectedSubs, setSelectedSubs] = useState<string[]>(['linkedin', 'linkedinads', 'linkedintips']);
-  const [customSub, setCustomSub] = useState('');
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>(['help', 'analytics']);
   const [customKeyword, setCustomKeyword] = useState('');
   const [lookbackHours, setLookbackHours] = useState(24);
   const [threadLimit, setThreadLimit] = useState(5);
   // Removed allowlist for simplicity - links allowed by default
 
-  const handleSubToggle = (sub: string) => {
-    setSelectedSubs(prev => 
-      prev.includes(sub) 
-        ? prev.filter(s => s !== sub)
-        : [...prev, sub]
-    );
-  };
-
-  const handleAddCustomSub = () => {
-    if (customSub.trim() && !selectedSubs.includes(customSub.trim())) {
-      setSelectedSubs(prev => [...prev, customSub.trim()]);
-      setCustomSub('');
+  // localStorage utilities for recent sessions
+  const getRecentSessionsFromStorage = (): RecentSession[] => {
+    try {
+      const stored = localStorage.getItem('threadscout_recent_sessions');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error reading recent sessions from localStorage:', error);
+      return [];
     }
   };
+
+  const saveSessionToStorage = useCallback((sessionData: { sessionId: string; threads: ThreadSummary[] }) => {
+    try {
+      const existing = getRecentSessionsFromStorage();
+      
+      // Create new session summary
+      const newSession: RecentSession = {
+        sessionId: sessionData.sessionId,
+        createdAt: Date.now(),
+        threadsCount: sessionData.threads.length,
+        scanParams: {
+          subs: selectedSubs,
+          keywords: selectedKeywords,
+          lookbackHours,
+          allowlist: []
+        },
+        topScore: sessionData.threads.length > 0 
+          ? Math.max(...sessionData.threads.map(t => t.score))
+          : 0
+      };
+
+      // Add to beginning and keep only last 5
+      const updated = [newSession, ...existing.filter(s => s.sessionId !== sessionData.sessionId)].slice(0, 5);
+      
+      // Also store the full session data for offline access
+      localStorage.setItem(`threadscout_session_${sessionData.sessionId}`, JSON.stringify(sessionData));
+      localStorage.setItem('threadscout_recent_sessions', JSON.stringify(updated));
+      setRecentSessions(updated);
+    } catch (error) {
+      console.error('Error saving session to localStorage:', error);
+    }
+  }, [selectedSubs, selectedKeywords, lookbackHours]);
+
+  // Load recent sessions on component mount
+  useEffect(() => {
+    const recent = getRecentSessionsFromStorage();
+    setRecentSessions(recent);
+    
+    // Add sample data for testing (only if localStorage is empty)
+    if (recent.length === 0 && process.env.NODE_ENV === 'development') {
+      const sampleSessions: RecentSession[] = [
+        // {
+        //   sessionId: 'sample_1',
+        //   createdAt: Date.now() - 2 * 60 * 60 * 1000, // 2 hours ago
+        //   threadsCount: 5,
+        //   topScore: 87,
+        //   scanParams: {
+        //     subs: ['linkedin', 'linkedinads'],
+        //     keywords: ['help', 'analytics'],
+        //     lookbackHours: 24,
+        //     allowlist: []
+        //   }
+        // },
+        // {
+        //   sessionId: 'sample_2', 
+        //   createdAt: Date.now() - 24 * 60 * 60 * 1000, // 1 day ago
+        //   threadsCount: 3,
+        //   topScore: 72,
+        //   scanParams: {
+        //     subs: ['startups', 'entrepreneur'], 
+        //     keywords: ['problem', 'solution'],
+        //     lookbackHours: 48,
+        //     allowlist: []
+        //   }
+        // }
+      ];
+      
+      try {
+        localStorage.setItem('threadscout_recent_sessions', JSON.stringify(sampleSessions));
+        setRecentSessions(sampleSessions);
+      } catch (error) {
+        console.error('Failed to set sample data:', error);
+      }
+    }
+  }, []);
+
+  // Save to localStorage when a scan completes (when results change from null to actual results)
+  useEffect(() => {
+    if (results && !isLoading && results.threads.length > 0) {
+      // Only save if this is a completed scan (not loading and has threads)
+      saveSessionToStorage(results);
+    }
+  }, [results, isLoading, saveSessionToStorage]);
+
 
   const handleKeywordToggle = (keyword: string) => {
     setSelectedKeywords(prev => 
@@ -115,6 +192,11 @@ export default function Dashboard() {
             break;
           
           case 'completed':
+            // Sort threads by score (highest to lowest) when streaming completes
+            setResults(prev => prev ? ({
+              ...prev,
+              threads: [...prev.threads].sort((a, b) => b.score - a.score)
+            }) : prev);
             setIsLoading(false);
             setCancelScan(null);
             setCurrentSessionId(null);
@@ -124,6 +206,11 @@ export default function Dashboard() {
             break;
           
           case 'cancelled':
+            // Sort threads by score (highest to lowest) even when cancelled
+            setResults(prev => prev ? ({
+              ...prev,
+              threads: [...prev.threads].sort((a, b) => b.score - a.score)
+            }) : prev);
             setIsLoading(false);
             setCancelScan(null);
             setCurrentSessionId(null);
@@ -190,13 +277,61 @@ export default function Dashboard() {
     }
   };
 
+  const loadPreviousScan = async (sessionId: string) => {
+    // For sample sessions, show a message that real data isn't available
+    if (sessionId.startsWith('sample_')) {
+      toast.info('Sample session - run a real scan to see actual results');
+      return;
+    }
+
+    try {
+      // First try to load from localStorage
+      const localData = localStorage.getItem(`threadscout_session_${sessionId}`);
+      if (localData) {
+        const sessionData = JSON.parse(localData);
+        setResults({
+          sessionId: sessionData.sessionId,
+          threads: sessionData.threads
+        });
+        toast.success('Previous scan results loaded!');
+        return;
+      }
+
+      // Fallback to server if not in localStorage
+      const sessionData = await api.getSession(sessionId);
+      setResults({
+        sessionId: sessionData.sessionId,
+        threads: sessionData.threads
+      });
+      toast.success('Previous scan results loaded!');
+    } catch (error) {
+      toast.error('This scan is no longer available');
+      console.error('Error loading previous scan:', error);
+      
+      // Remove the invalid session from localStorage
+      const existing = getRecentSessionsFromStorage();
+      const filtered = existing.filter(s => s.sessionId !== sessionId);
+      localStorage.setItem('threadscout_recent_sessions', JSON.stringify(filtered));
+      localStorage.removeItem(`threadscout_session_${sessionId}`);
+      setRecentSessions(filtered);
+    }
+  };
+
+  const formatTimeAgo = (timestamp: number) => {
+    const hoursAgo = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60));
+    if (hoursAgo < 1) return 'Just now';
+    if (hoursAgo < 24) return `${hoursAgo}h ago`;
+    const daysAgo = Math.floor(hoursAgo / 24);
+    return `${daysAgo}d ago`;
+  };
+
   const getScoreBadgeVariant = (score: number) => {
     if (score >= 70) return 'default'; // green
     if (score >= 50) return 'secondary'; // yellow
     return 'outline'; // red
   };
 
-  const formatTimeAgo = (createdUtc: number) => {
+  const formatThreadTimeAgo = (createdUtc: number) => {
     const hoursAgo = Math.floor((Date.now() / 1000 - createdUtc) / 3600);
     if (hoursAgo < 1) return 'Just now';
     if (hoursAgo < 24) return `${hoursAgo}h ago`;
@@ -227,9 +362,10 @@ export default function Dashboard() {
         </p>
       </div>
 
+
       {/* Dashboard Content */}
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold mb-2">Dashboard</h2>
+        <h2 className="text-2xl font-semibold mb-2">New Scan</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -245,47 +381,14 @@ export default function Dashboard() {
             {/* Subreddits */}
             <div>
               <Label className="text-base font-medium">Subreddits</Label>
-              <div className="flex flex-wrap gap-2 mt-2 mb-3">
-                {POPULAR_SUBREDDITS.map(sub => (
-                  <Badge
-                    key={sub}
-                    variant={selectedSubs.includes(sub) ? 'default' : 'outline'}
-                    className="cursor-pointer"
-                    onClick={() => handleSubToggle(sub)}
-                  >
-                    r/{sub}
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add custom subreddit..."
-                  value={customSub}
-                  onChange={(e) => setCustomSub(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustomSub()}
+              <div className="mt-2">
+                <SubredditAutocomplete
+                  selectedSubs={selectedSubs}
+                  onSubsChange={setSelectedSubs}
+                  placeholder="Type to search and add subreddits..."
+                  disabled={isLoading}
                 />
-                <Button variant="outline" onClick={handleAddCustomSub}>
-                  Add
-                </Button>
               </div>
-              {selectedSubs.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-1">Selected:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedSubs.map(sub => (
-                      <Badge key={sub} variant="secondary" className="text-xs">
-                        r/{sub}
-                        <button
-                          className="ml-1 hover:text-destructive"
-                          onClick={() => handleSubToggle(sub)}
-                        >
-                          ×
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             <Separator />
@@ -438,12 +541,12 @@ export default function Dashboard() {
                           <Badge variant="outline" className="text-xs">
                             r/{thread.thread.sub}
                           </Badge>
-                          <Badge variant={getScoreBadgeVariant(thread.score)}>
+                          <Badge variant={getScoreBadgeVariant(thread.score)} title={thread.scoreHint}>
                             {thread.score}
                           </Badge>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {formatTimeAgo(thread.thread.createdUtc)}
+                          {formatThreadTimeAgo(thread.thread.createdUtc)}
                         </span>
                       </div>
                       
@@ -462,8 +565,12 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      <p className="text-sm text-muted-foreground mb-3">
+                      <p className="text-sm text-muted-foreground mb-2">
                         {thread.whyFit}
+                      </p>
+                      
+                      <p className="text-xs text-blue-600 mb-3 italic">
+                        Score rationale: {thread.scoreHint}
                       </p>
 
                       <div className="flex flex-wrap gap-1 mb-3">
@@ -499,7 +606,7 @@ export default function Dashboard() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => navigate(`/thread/${thread.thread.id}?sessionId=${results.sessionId}`)}
+                          onClick={() => window.open(`https://www.reddit.com${thread.thread.permalink}`, '_blank')}
                         >
                           Open Thread
                           <ExternalLink className="ml-1 h-3 w-3" />
@@ -562,13 +669,110 @@ export default function Dashboard() {
                     </div>
                   ))
                 )}
+                
+                {/* Show recent scans at bottom when there are current results */}
+                {recentSessions.length > 0 && (
+                  <div className="mt-8 pt-6 border-t">
+                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      Recent Scans
+                    </h3>
+                    <div className="grid grid-cols-1 gap-2">
+                      {recentSessions.slice(0, 3).map((session) => (
+                        <div 
+                          key={session.sessionId} 
+                          className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer ${
+                            session.sessionId.startsWith('sample_') ? 'bg-blue-50' : 'bg-gray-50'
+                          }`}
+                          onClick={() => loadPreviousScan(session.sessionId)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {session.threadsCount}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {session.topScore}
+                              </Badge>
+                              {session.sessionId.startsWith('sample_') && (
+                                <Badge variant="outline" className="text-xs text-blue-600">
+                                  Sample
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm">
+                              r/{session.scanParams.subs.slice(0, 2).join(', ')}
+                              {session.scanParams.subs.length > 2 && '...'}
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatTimeAgo(session.createdAt)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Configure your scan parameters and click "Scan Threads" to get started
-                </p>
+              <div>
+                {/* Show recent scans when no current results */}
+                {recentSessions.length > 0 ? (
+                  <div>
+                    <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Recent Scans
+                    </h3>
+                    <div className="space-y-3">
+                      {recentSessions.map((session) => (
+                        <div 
+                          key={session.sessionId} 
+                          className={`border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${
+                            session.sessionId.startsWith('sample_') ? 'bg-blue-50 border-blue-200' : ''
+                          }`}
+                          onClick={() => loadPreviousScan(session.sessionId)}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {session.threadsCount} threads
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                <BarChart3 className="h-3 w-3 mr-1" />
+                                {session.topScore}
+                              </Badge>
+                              {session.sessionId.startsWith('sample_') && (
+                                <Badge variant="outline" className="text-xs text-blue-600">
+                                  Sample
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {formatTimeAgo(session.createdAt)}
+                            </span>
+                          </div>
+                          
+                          <div className="text-sm font-medium mb-1">
+                            r/{session.scanParams.subs.slice(0, 2).join(', ')}
+                            {session.scanParams.subs.length > 2 && ` +${session.scanParams.subs.length - 2}`}
+                          </div>
+                          
+                          <div className="text-xs text-muted-foreground">
+                            Keywords: {session.scanParams.keywords.slice(0, 2).join(', ')}
+                            {session.scanParams.keywords.length > 2 && '...'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      Configure your scan parameters and click "Scan Threads" to get started
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

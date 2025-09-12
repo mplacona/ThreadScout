@@ -162,9 +162,7 @@ async function scanWithStreaming(
         
         const agentResponse = await agentClient.scoreAndDraft(
           fullThread,
-          rules,
-          '', // docsContext
-          allowlist
+          rules
         );
         
         // DEBUG: Log raw agent response variants
@@ -196,9 +194,16 @@ async function scanWithStreaming(
         console.log('Variant B (cleaned):', JSON.stringify(variantBCleaned, null, 2));
         console.log('Variant B (disclosure):', JSON.stringify(variantBDisclosure, null, 2));
 
+        // Generate scoreHint based on score since agent doesn't provide it
+        const scoreHint = agentResponse.score >= 80 ? 'Excellent fit for engagement' :
+                         agentResponse.score >= 60 ? 'Good opportunity to engage' :
+                         agentResponse.score >= 40 ? 'Moderate fit - consider context' :
+                         'Lower priority thread';
+
         const analysis: ThreadAnalysis = {
           thread: fullThread,
           score: agentResponse.score,
+          scoreHint,
           whyFit: agentResponse.whyFit,
           rules,
           risks: agentResponse.risks,
@@ -219,6 +224,7 @@ async function scanWithStreaming(
           thread: {
             thread: analysis.thread,
             score: analysis.score,
+            scoreHint: analysis.scoreHint,
             whyFit: analysis.whyFit,
             rules: analysis.rules,
             risks: analysis.risks,

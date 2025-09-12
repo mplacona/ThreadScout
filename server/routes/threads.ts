@@ -4,8 +4,55 @@ import type { SessionData } from '../schemas/thread.js';
 
 const app = new Hono();
 
+// GET /api/threads/recent - Get list of recent sessions (MUST come before /threads route)
+app.get('/recent', async (c) => {
+  try {
+    const storage = makeStorage();
+    
+    // Get all session files
+    const sessionFiles = await storage.list('sessions/');
+    
+    // Load session metadata (just sessionId, createdAt, and basic scan info)
+    const sessions = [];
+    
+    // Filter for session files and get the most recent 10
+    const sessionKeys = sessionFiles
+      .filter(key => key.startsWith('sessions/') && key.endsWith('.json'))
+      .slice(-10);
+    
+    for (const key of sessionKeys) {
+      try {
+        const sessionData = await storage.readJSON<SessionData>(key);
+        if (sessionData) {
+          sessions.push({
+            sessionId: sessionData.sessionId,
+            createdAt: sessionData.createdAt,
+            threadsCount: sessionData.threads.length,
+            scanParams: sessionData.scanParams,
+            topScore: sessionData.threads.length > 0 
+              ? Math.max(...sessionData.threads.map(t => t.score))
+              : 0
+          });
+        }
+      } catch (error) {
+        console.error(`Error reading session file ${key}:`, error);
+      }
+    }
+    
+    // Sort by creation time (newest first) and limit to 5
+    const recentSessions = sessions
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 5);
+    
+    return c.json(recentSessions);
+  } catch (error) {
+    console.error('Error fetching recent sessions:', error);
+    return c.json({ error: 'Failed to fetch recent sessions' }, 500);
+  }
+});
+
 // GET /api/threads?sessionId=...
-app.get('/threads', async (c) => {
+app.get('/', async (c) => {
   const sessionId = c.req.query('sessionId');
   
   if (!sessionId) {
@@ -28,7 +75,7 @@ app.get('/threads', async (c) => {
 });
 
 // GET /api/threads/:id?sessionId=...
-app.get('/threads/:id', async (c) => {
+app.get('/:id', async (c) => {
   const threadId = c.req.param('id');
   const sessionId = c.req.query('sessionId');
   

@@ -325,4 +325,72 @@ export class RedditClient {
       };
     }
   }
+
+  async searchSubreddits(query: string, limit: number = 10): Promise<Array<{name: string, subscribers: number, displayName: string}>> {
+    // Helper function to format subscriber count
+    const formatSubscribers = (count: number): string => {
+      if (count >= 1000000) {
+        return Math.round(count / 1000000) + 'M';
+      } else if (count >= 1000) {
+        return Math.round(count / 1000) + 'K';
+      } else {
+        return count.toString();
+      }
+    };
+
+    try {
+      // Use Reddit's public search API to find subreddits (no auth needed)
+      const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=${Math.min(limit * 2, 50)}&type=sr`;
+      
+      // Make a direct fetch request with proper headers (bypass OAuth)
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': this.userAgent,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data?.data?.children) {
+        return data.data.children
+          .map((child: any) => {
+            const subredditData = child.data;
+            return {
+              name: subredditData.display_name,
+              subscribers: subredditData.subscribers || 0,
+              subredditType: subredditData.subreddit_type,
+              displayName: `${subredditData.display_name} (${formatSubscribers(subredditData.subscribers || 0)} subs)`
+            };
+          })
+          .filter((sub: any) => 
+            sub.name && 
+            typeof sub.name === 'string' && 
+            sub.subredditType === 'public' // Only include public subreddits
+          )
+          .slice(0, limit);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Failed to search subreddits:', error);
+      // Fallback to basic string matching if API fails
+      const commonSubs = [
+        'linkedin', 'linkedinads', 'linkedintips', 'webdev', 'reactjs', 'javascript', 
+        'programming', 'webdesign', 'startups', 'entrepreneur', 'smallbusiness', 
+        'marketing', 'seo', 'learnprogramming', 'Frontend', 'Backend', 'DevOps',
+        'MachineLearning', 'artificial', 'webDevelopment', 'ProgrammerHumor', 'funny',
+        'fun', 'ThisLooksFun', 'LetGirlsHaveFun'
+      ];
+      
+      const lowerQuery = query.toLowerCase();
+      return commonSubs
+        .filter(sub => sub.toLowerCase().includes(lowerQuery))
+        .slice(0, limit)
+        .map(name => ({ name, subscribers: 0, displayName: name }));
+    }
+  }
 }
