@@ -18,7 +18,7 @@ const app = new Hono();
 app.use('/*', async (c, next) => {
   const origin = c.req.header('Origin');
   const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? [] // Configure with your production domain
+    ? [process.env.FRONTEND_URL || '*'] // Configure with your production domain
     : ['http://localhost:5173', 'http://127.0.0.1:5173'];
 
   if (allowedOrigins.includes(origin || '')) {
@@ -67,7 +67,7 @@ app.notFound((c) => {
   return c.json({ error: 'Not found' }, 404);
 });
 
-const port = parseInt(process.env.PORT || '3000');
+const port = parseInt(process.env.PORT || '8080');
 
 console.log(`Starting ThreadScout server on port ${port}...`);
 console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
