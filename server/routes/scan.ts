@@ -7,6 +7,7 @@ import { RulesCache } from '../services/rulesCache.js';
 import { makeStorage, StorageKeys } from '../services/storage.js';
 import { enforceOneLink, enforceAllowlist, ensureDisclosure } from '../services/validators.js';
 import type { SessionData, ThreadAnalysis } from '../schemas/thread.js';
+import { logger } from '../utils/logger.js';
 
 const app = new Hono();
 
@@ -37,22 +38,22 @@ app.post(
       const effectiveAllowlist = allowlist || [];
 
       // Search for candidate threads
-      console.log(`🚀 Starting scan: ${subs.length} subs, ${keywords.length} keywords, ${lookbackHours}h lookback`);
+      logger.scan.info(`Starting scan: ${subs.length} subs, ${keywords.length} keywords, ${lookbackHours}h lookback`);
       const candidates = await redditClient.searchThreads(subs, keywords, lookbackHours);
       
-      console.log(`🔍 Reddit search returned ${candidates.length} candidates`);
+      logger.scan.info(`Reddit search returned ${candidates.length} candidates`);
       
       // Process top candidates (limit based on threadLimit parameter)
       const maxThreads = threadLimit || 10;
       const topCandidates = candidates.slice(0, maxThreads);
       const analyses: ThreadAnalysis[] = [];
       
-      console.log(`🤖 Processing ${topCandidates.length} candidates with agent`);
-      console.log(`📊 AGENT REQUEST TRACKING: Will process ${topCandidates.length} threads, expecting ${topCandidates.length} agent requests`);
+      logger.scan.info(`Processing ${topCandidates.length} candidates with agent`);
+      logger.scan.debug(`AGENT REQUEST TRACKING: Will process ${topCandidates.length} threads, expecting ${topCandidates.length} agent requests`);
       let agentRequestCount = 0;
 
       if (topCandidates.length === 0) {
-        console.log(`⚠️  No candidates found - scan will return empty results`);
+        logger.scan.warn('No candidates found - scan will return empty results');
       }
 
       for (let i = 0; i < topCandidates.length; i++) {
@@ -60,7 +61,7 @@ app.post(
         
         // Add delay between requests to avoid rate limiting (except for first request)
         if (i > 0) {
-          console.log(`⏱️  Adding 2s delay before processing thread ${i + 1} to avoid rate limits`);
+          logger.scan.debug(`Adding 2s delay before processing thread ${i + 1} to avoid rate limits`);
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
@@ -69,26 +70,26 @@ app.post(
           const rules = await rulesCache.getRules(candidate.sub);
           
           // Get full thread details
-          console.log(`📖 Getting full thread data for: ${candidate.title}`);
+          logger.scan.debug(`Getting full thread data for: ${candidate.title}`);
           const fullThread = await redditClient.getThread(candidate.permalink);
           
-          console.log(`🤖 Calling agent with thread: ${fullThread.title.slice(0, 50)}... (${fullThread.topComments.length} comments)`);
+          logger.scan.debug(`Calling agent with thread: ${fullThread.title.slice(0, 50)}... (${fullThread.topComments.length} comments)`);
           
           // Get AI analysis and drafts
           agentRequestCount++;
-          console.log(`📈 Making agent request ${agentRequestCount}/${topCandidates.length} for thread: ${fullThread.id}`);
+          logger.scan.info(`Making agent request ${agentRequestCount}/${topCandidates.length} for thread: ${fullThread.id}`);
           
           const agentResponse = await agentClient.scoreAndDraft(
             fullThread,
             rules
           );
           
-          console.log(`🎯 Agent scored thread ${fullThread.id}: ${agentResponse.score}/100 - ${agentResponse.whyFit}`);
+          logger.scan.info(`Agent scored thread ${fullThread.id}: ${agentResponse.score}/100 - ${agentResponse.whyFit}`);
           
-          // DEBUG: Log raw agent response variants
-          console.log('🔍 DEBUG - Raw Agent Response Variants:');
-          console.log('Variant A:', JSON.stringify(agentResponse.variantA, null, 2));
-          console.log('Variant B:', JSON.stringify(agentResponse.variantB, null, 2));
+          logger.scan.debug('Raw Agent Response Variants:', {
+            variantA: agentResponse.variantA,
+            variantB: agentResponse.variantB
+          });
 
           // Validate and clean variant A
           const variantAOneLink = enforceOneLink(agentResponse.variantA.text);
@@ -111,11 +112,11 @@ app.post(
             variantBCleaned = ensureDisclosure(variantBCleaned, variantBDisclosure);
           }
           
-          // DEBUG: Log processed variants
-          console.log('🔧 DEBUG - After Processing:');
-          console.log('Variant A (cleaned):', JSON.stringify(variantAAllowlist.cleaned, null, 2));
-          console.log('Variant B (cleaned):', JSON.stringify(variantBCleaned, null, 2));
-          console.log('Variant B (disclosure):', JSON.stringify(variantBDisclosure, null, 2));
+          logger.scan.debug('Processed variants:', {
+            variantACleaned: variantAAllowlist.cleaned,
+            variantBCleaned,
+            variantBDisclosure
+          });
 
           // Generate scoreHint based on score since agent doesn't provide it
           const scoreHint = agentResponse.score >= 80 ? 'Excellent fit for engagement' :
@@ -141,13 +142,13 @@ app.post(
 
           analyses.push(analysis);
         } catch (error) {
-          console.error(`Error processing thread ${candidate.id}:`, error);
+          logger.scan.error(`Error processing thread ${candidate.id}:`, error);
           // Continue with other threads
         }
       }
 
       // Generate session ID
-      const finalSessionId = sessionId || `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const finalSessionId = sessionId || `scan_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       
       // Store session data
       const sessionData: SessionData = {
@@ -182,10 +183,10 @@ app.post(
         })),
       };
 
-      console.log(`📊 AGENT REQUEST SUMMARY: Made ${agentRequestCount} agent requests for ${analyses.length} successful threads`);
+      logger.scan.info(`AGENT REQUEST SUMMARY: Made ${agentRequestCount} agent requests for ${analyses.length} successful threads`);
       return c.json(response);
     } catch (error) {
-      console.error('Scan error:', error);
+      logger.scan.error('Scan error:', error);
       return c.json(
         { 
           error: 'Failed to scan threads',

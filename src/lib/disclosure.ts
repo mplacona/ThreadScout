@@ -28,9 +28,9 @@ export function extractDisclosure(text: string): string | null {
   const disclosurePatterns = [
     /\bI work (?:at|on|for) \w+/i,
     /\bI'm affiliated with \w+/i,
-    /\bFull disclosure[:\-]\s*.+/i,
-    /\bDisclosure[:\-]\s*.+/i,
-    /\b(?:disclaimer|note)[:\-]\s*I (?:work|am).+/i,
+    /\bFull disclosure[:-]\s*.+/i,
+    /\bDisclosure[:-]\s*.+/i,
+    /\b(?:disclaimer|note)[:-]\s*I (?:work|am).+/i,
   ];
 
   for (const pattern of disclosurePatterns) {

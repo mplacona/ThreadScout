@@ -40,8 +40,9 @@ export class SpacesStorage implements StorageProvider {
       }
       
       return JSON.parse(data) as T;
-    } catch (error: any) {
-      if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+    } catch (error: unknown) {
+      const awsError = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+      if (awsError.name === 'NoSuchKey' || awsError.$metadata?.httpStatusCode === 404) {
         return null;
       }
       throw error;

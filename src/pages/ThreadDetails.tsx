@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,9 +29,9 @@ export default function ThreadDetails() {
     if (threadId) {
       loadThreadDetails();
     }
-  }, [threadId]);
+  }, [threadId, loadThreadDetails]);
 
-  const loadThreadDetails = async () => {
+  const loadThreadDetails = useCallback(async () => {
     if (!threadId) return;
     
     setLoading(true);
@@ -72,7 +72,7 @@ export default function ThreadDetails() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [threadId, navigate, toast]);
 
   const copyToClipboard = async (text: string, variant: string) => {
     try {

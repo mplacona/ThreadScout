@@ -19,10 +19,7 @@ export function FormattedText({ children, className = '' }: FormattedTextProps) 
     
     return lines.map((line, lineIndex) => {
       const parts: React.ReactNode[] = [];
-      let currentIndex = 0;
-      
       // Process the line for formatting
-      let processedLine = line;
       const patterns = [
         { regex: /\*\*(.*?)\*\*/g, component: 'strong' },
         { regex: /\*(.*?)\*/g, component: 'em' },
@@ -95,9 +92,9 @@ export function FormattedText({ children, className = '' }: FormattedTextProps) 
         parts.push(line.slice(currentPos));
       }
       
-      // If no formatting was found, just return the original line
+      // If no formatting was found, add the original line (even if empty)
       if (parts.length === 0) {
-        parts.push(line);
+        parts.push(line || '\u00A0'); // Use non-breaking space for empty lines to preserve spacing
       }
       
       return (
