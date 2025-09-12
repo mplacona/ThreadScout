@@ -16,6 +16,24 @@ interface SubredditAutocompleteProps {
 const searchCache = new Map<string, { results: Array<{name: string, subscribers: number, displayName: string}>; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+// Popular subreddits as fallback/initial suggestions
+const popularSubs = [
+  { name: 'webdev', subscribers: 0, displayName: 'webdev' },
+  { name: 'reactjs', subscribers: 0, displayName: 'reactjs' },
+  { name: 'javascript', subscribers: 0, displayName: 'javascript' },
+  { name: 'programming', subscribers: 0, displayName: 'programming' },
+  { name: 'webdesign', subscribers: 0, displayName: 'webdesign' },
+  { name: 'startups', subscribers: 0, displayName: 'startups' },
+  { name: 'entrepreneur', subscribers: 0, displayName: 'entrepreneur' },
+  { name: 'smallbusiness', subscribers: 0, displayName: 'smallbusiness' },
+  { name: 'marketing', subscribers: 0, displayName: 'marketing' },
+  { name: 'seo', subscribers: 0, displayName: 'seo' },
+  { name: 'linkedin', subscribers: 0, displayName: 'linkedin' },
+  { name: 'linkedinads', subscribers: 0, displayName: 'linkedinads' },
+  { name: 'linkedintips', subscribers: 0, displayName: 'linkedintips' },
+  { name: 'learnprogramming', subscribers: 0, displayName: 'learnprogramming' }
+];
+
 export function SubredditAutocomplete({
   selectedSubs,
   onSubsChange,
@@ -27,24 +45,6 @@ export function SubredditAutocomplete({
   const [suggestions, setSuggestions] = useState<Array<{name: string, subscribers: number, displayName: string}>>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
-
-  // Popular subreddits as fallback/initial suggestions
-  const popularSubs = [
-    { name: 'webdev', subscribers: 0, displayName: 'webdev' },
-    { name: 'reactjs', subscribers: 0, displayName: 'reactjs' },
-    { name: 'javascript', subscribers: 0, displayName: 'javascript' },
-    { name: 'programming', subscribers: 0, displayName: 'programming' },
-    { name: 'webdesign', subscribers: 0, displayName: 'webdesign' },
-    { name: 'startups', subscribers: 0, displayName: 'startups' },
-    { name: 'entrepreneur', subscribers: 0, displayName: 'entrepreneur' },
-    { name: 'smallbusiness', subscribers: 0, displayName: 'smallbusiness' },
-    { name: 'marketing', subscribers: 0, displayName: 'marketing' },
-    { name: 'seo', subscribers: 0, displayName: 'seo' },
-    { name: 'linkedin', subscribers: 0, displayName: 'linkedin' },
-    { name: 'linkedinads', subscribers: 0, displayName: 'linkedinads' },
-    { name: 'linkedintips', subscribers: 0, displayName: 'linkedintips' },
-    { name: 'learnprogramming', subscribers: 0, displayName: 'learnprogramming' }
-  ];
 
   const searchSubreddits = useCallback(async (query: string) => {
     if (query.length < 2) {

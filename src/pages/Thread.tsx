@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,9 +39,9 @@ export default function Thread() {
     }
 
     loadThread();
-  }, [id, sessionId]);
+  }, [id, sessionId, loadThread]);
 
-  const loadThread = async () => {
+  const loadThread = useCallback(async () => {
     if (!id || !sessionId) return;
 
     try {
@@ -57,7 +57,7 @@ export default function Thread() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, sessionId]);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {

@@ -1,7 +1,7 @@
 // Server-side validators - duplicated to avoid importing client code
 
 export function extractLinks(text: string): string[] {
-  const urlRegex = /https?:\/\/[^\s<>"\[\]{}|\\^`]+/gi;
+  const urlRegex = /https?:\/\/[^\s<>"[\]{}|\\^`]+/gi;
   return text.match(urlRegex) || [];
 }
 

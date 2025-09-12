@@ -26,31 +26,51 @@ Find high-intent Reddit threads where your product can help, summarize subreddit
 
 ## Quick Start
 
-1. **Install dependencies**:
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn package manager
+
+### 🚀 Get Started in 3 Steps
+
+1. **Clone and Install**
    ```bash
+   git clone git@github.com:mplacona/ThreadScout.git
+   cd ThreadScout
    npm install
    ```
 
-2. **Configure environment** (copy `.env.example` to `.env`):
+2. **Configure Environment** (optional for demo)
    ```bash
    cp .env.example .env
-   # Edit .env with your credentials (optional for demo)
+   # Edit .env with your API credentials (see below)
    ```
 
-3. **Start development**:
+3. **Start Development**
    ```bash
    npm run dev
    ```
-   This runs both the Vite frontend (http://localhost:5173) and Hono backend (http://localhost:3000).
+   
+   This starts:
+   - Frontend: http://localhost:5173
+   - Backend: http://localhost:3000
 
-4. **Run tests**:
-   ```bash
-   npm test
-   ```
+That's it! 🎉 The app works without configuration using public Reddit APIs and mock AI responses.
+
+### 🧪 Run Tests
+```bash
+npm test              # Run all tests
+npm test -- filename  # Run specific test file
+```
+
+### 🏗️ Build for Production
+```bash
+npm run build    # Production build
+npm run preview  # Preview production build
+```
 
 ## Environment Configuration
 
-### Required for Production if not on VPS
+### Required for Production if not on App Platform
 ```bash
 # DigitalOcean Spaces (for persistent storage)
 SPACES_KEY=your_spaces_key

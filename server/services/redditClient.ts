@@ -26,6 +26,27 @@ export type RulesSummary = {
   notes: string[];
 };
 
+type RedditSubredditData = {
+  display_name: string;
+  subscribers: number;
+  subreddit_type: string;
+};
+
+type RedditSubredditChild = {
+  data: RedditSubredditData;
+};
+
+type RedditCommentData = {
+  author: string;
+  body: string;
+  score: number;
+  created_utc: number;
+};
+
+type RedditComment = {
+  data: RedditCommentData;
+};
+
 export class RedditClient {
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
@@ -78,7 +99,7 @@ export class RedditClient {
     }
   }
 
-  private async makeRequest(endpoint: string): Promise<any> {
+  private async makeRequest(endpoint: string): Promise<unknown> {
     const token = await this.getAccessToken();
     
     const headers: Record<string, string> = {
@@ -230,8 +251,8 @@ export class RedditClient {
       // Get more comments and include deeper analysis
       const topComments = commentsData
         .slice(0, 10) // Get top 10 comments instead of 5
-        .filter((comment: any) => comment.data?.body && comment.data.body !== '[deleted]' && comment.data.body !== '[removed]')
-        .map((comment: any) => ({
+        .filter((comment: RedditComment) => comment.data?.body && comment.data.body !== '[deleted]' && comment.data.body !== '[removed]')
+        .map((comment: RedditComment) => ({
           author: comment.data.author,
           body: comment.data.body.slice(0, 800), // Longer excerpts for better context
           score: comment.data.score || 0,
@@ -327,12 +348,12 @@ export class RedditClient {
   }
 
   async searchSubreddits(query: string, limit: number = 10): Promise<Array<{name: string, subscribers: number, displayName: string}>> {
-    // Helper function to format subscriber count
+    // Helper function to format subscriber count (round up to next integer)
     const formatSubscribers = (count: number): string => {
       if (count >= 1000000) {
-        return Math.round(count / 1000000) + 'M';
+        return Math.ceil(count / 1000000) + 'M';
       } else if (count >= 1000) {
-        return Math.round(count / 1000) + 'K';
+        return Math.ceil(count / 1000) + 'K';
       } else {
         return count.toString();
       }
@@ -340,7 +361,7 @@ export class RedditClient {
 
     try {
       // Use Reddit's public search API to find subreddits (no auth needed)
-      const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=${Math.min(limit * 2, 50)}&type=sr`;
+      const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=5&type=sr`;
       
       // Make a direct fetch request with proper headers (bypass OAuth)
       const response = await fetch(url, {
@@ -350,6 +371,11 @@ export class RedditClient {
       });
 
       if (!response.ok) {
+        // If we get a 403, 429, or other rate limit/access error, fall back to local search
+        if (response.status === 403 || response.status === 429 || response.status === 401) {
+          console.warn(`Reddit API returned ${response.status}, falling back to local search`);
+          throw new Error(`Rate limited or access denied: ${response.status}`);
+        }
         throw new Error(`HTTP ${response.status}`);
       }
 
@@ -357,16 +383,16 @@ export class RedditClient {
       
       if (data?.data?.children) {
         return data.data.children
-          .map((child: any) => {
+          .map((child: RedditSubredditChild) => {
             const subredditData = child.data;
             return {
               name: subredditData.display_name,
               subscribers: subredditData.subscribers || 0,
               subredditType: subredditData.subreddit_type,
-              displayName: `${subredditData.display_name} (${formatSubscribers(subredditData.subscribers || 0)} subs)`
+              displayName: `${subredditData.display_name} (${formatSubscribers(subredditData.subscribers || 0)} Subs)`
             };
           })
-          .filter((sub: any) => 
+          .filter((sub) => 
             sub.name && 
             typeof sub.name === 'string' && 
             sub.subredditType === 'public' // Only include public subreddits
@@ -382,8 +408,10 @@ export class RedditClient {
         'linkedin', 'linkedinads', 'linkedintips', 'webdev', 'reactjs', 'javascript', 
         'programming', 'webdesign', 'startups', 'entrepreneur', 'smallbusiness', 
         'marketing', 'seo', 'learnprogramming', 'Frontend', 'Backend', 'DevOps',
-        'MachineLearning', 'artificial', 'webDevelopment', 'ProgrammerHumor', 'funny',
-        'fun', 'ThisLooksFun', 'LetGirlsHaveFun'
+        'MachineLearning', 'artificial', 'webDevelopment', 'ProgrammerHumor',
+        'SaaS', 'saas', 'software', 'microsaas', 'indiehackers', 'nocode', 
+        'lowcode', 'productivity', 'business', 'analytics', 'automation',
+        'apis', 'databases', 'cloud', 'aws', 'azure', 'googlecloud'
       ];
       
       const lowerQuery = query.toLowerCase();

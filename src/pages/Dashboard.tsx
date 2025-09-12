@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Search, TrendingUp, MessageCircle, ThumbsUp, ExternalLink, X, Eye, Copy, Clock, BarChart3 } from 'lucide-react';
+import { Search, TrendingUp, MessageCircle, ThumbsUp, ExternalLink, X, Eye, Copy, Clock, BarChart3, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, type ScanRequest, type ThreadSummary, type StreamingScanEvent, type RecentSession } from '@/lib/api';
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SubredditAutocomplete } from '@/components/ui/subreddit-autocomplete';
+import { useRecentSessions } from '@/hooks/useRecentSessions';
 
 
 const COMMON_KEYWORDS = [
@@ -21,8 +22,8 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<{ sessionId: string; threads: ThreadSummary[] } | null>(null);
   
-  // Recent sessions state (localStorage-based)
-  const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
+  // Recent sessions hook
+  const { recentSessions, saveSessionToStorage, loadPreviousScan, deleteSession } = useRecentSessions();
   
   // Streaming scan state
   const [scanStatus, setScanStatus] = useState<string>('');
@@ -41,99 +42,16 @@ export default function Dashboard() {
   const [threadLimit, setThreadLimit] = useState(5);
   // Removed allowlist for simplicity - links allowed by default
 
-  // localStorage utilities for recent sessions
-  const getRecentSessionsFromStorage = (): RecentSession[] => {
-    try {
-      const stored = localStorage.getItem('threadscout_recent_sessions');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Error reading recent sessions from localStorage:', error);
-      return [];
-    }
-  };
-
-  const saveSessionToStorage = useCallback((sessionData: { sessionId: string; threads: ThreadSummary[] }) => {
-    try {
-      const existing = getRecentSessionsFromStorage();
-      
-      // Create new session summary
-      const newSession: RecentSession = {
-        sessionId: sessionData.sessionId,
-        createdAt: Date.now(),
-        threadsCount: sessionData.threads.length,
-        scanParams: {
-          subs: selectedSubs,
-          keywords: selectedKeywords,
-          lookbackHours,
-          allowlist: []
-        },
-        topScore: sessionData.threads.length > 0 
-          ? Math.max(...sessionData.threads.map(t => t.score))
-          : 0
-      };
-
-      // Add to beginning and keep only last 5
-      const updated = [newSession, ...existing.filter(s => s.sessionId !== sessionData.sessionId)].slice(0, 5);
-      
-      // Also store the full session data for offline access
-      localStorage.setItem(`threadscout_session_${sessionData.sessionId}`, JSON.stringify(sessionData));
-      localStorage.setItem('threadscout_recent_sessions', JSON.stringify(updated));
-      setRecentSessions(updated);
-    } catch (error) {
-      console.error('Error saving session to localStorage:', error);
-    }
-  }, [selectedSubs, selectedKeywords, lookbackHours]);
-
-  // Load recent sessions on component mount
-  useEffect(() => {
-    const recent = getRecentSessionsFromStorage();
-    setRecentSessions(recent);
-    
-    // Add sample data for testing (only if localStorage is empty)
-    if (recent.length === 0 && process.env.NODE_ENV === 'development') {
-      const sampleSessions: RecentSession[] = [
-        // {
-        //   sessionId: 'sample_1',
-        //   createdAt: Date.now() - 2 * 60 * 60 * 1000, // 2 hours ago
-        //   threadsCount: 5,
-        //   topScore: 87,
-        //   scanParams: {
-        //     subs: ['linkedin', 'linkedinads'],
-        //     keywords: ['help', 'analytics'],
-        //     lookbackHours: 24,
-        //     allowlist: []
-        //   }
-        // },
-        // {
-        //   sessionId: 'sample_2', 
-        //   createdAt: Date.now() - 24 * 60 * 60 * 1000, // 1 day ago
-        //   threadsCount: 3,
-        //   topScore: 72,
-        //   scanParams: {
-        //     subs: ['startups', 'entrepreneur'], 
-        //     keywords: ['problem', 'solution'],
-        //     lookbackHours: 48,
-        //     allowlist: []
-        //   }
-        // }
-      ];
-      
-      try {
-        localStorage.setItem('threadscout_recent_sessions', JSON.stringify(sampleSessions));
-        setRecentSessions(sampleSessions);
-      } catch (error) {
-        console.error('Failed to set sample data:', error);
-      }
-    }
-  }, []);
-
-  // Save to localStorage when a scan completes (when results change from null to actual results)
+  // Save to localStorage when a scan completes
   useEffect(() => {
     if (results && !isLoading && results.threads.length > 0) {
-      // Only save if this is a completed scan (not loading and has threads)
-      saveSessionToStorage(results);
+      saveSessionToStorage(results, {
+        subs: selectedSubs,
+        keywords: selectedKeywords,
+        lookbackHours
+      });
     }
-  }, [results, isLoading, saveSessionToStorage]);
+  }, [results, isLoading, saveSessionToStorage, selectedSubs, selectedKeywords, lookbackHours]);
 
 
   const handleKeywordToggle = (keyword: string) => {
@@ -277,43 +195,17 @@ export default function Dashboard() {
     }
   };
 
-  const loadPreviousScan = async (sessionId: string) => {
-    // For sample sessions, show a message that real data isn't available
-    if (sessionId.startsWith('sample_')) {
-      toast.info('Sample session - run a real scan to see actual results');
-      return;
+  const handleLoadPreviousScan = async (sessionId: string) => {
+    const sessionData = await loadPreviousScan(sessionId);
+    if (sessionData) {
+      setResults(sessionData);
     }
+  };
 
-    try {
-      // First try to load from localStorage
-      const localData = localStorage.getItem(`threadscout_session_${sessionId}`);
-      if (localData) {
-        const sessionData = JSON.parse(localData);
-        setResults({
-          sessionId: sessionData.sessionId,
-          threads: sessionData.threads
-        });
-        toast.success('Previous scan results loaded!');
-        return;
-      }
-
-      // Fallback to server if not in localStorage
-      const sessionData = await api.getSession(sessionId);
-      setResults({
-        sessionId: sessionData.sessionId,
-        threads: sessionData.threads
-      });
-      toast.success('Previous scan results loaded!');
-    } catch (error) {
-      toast.error('This scan is no longer available');
-      console.error('Error loading previous scan:', error);
-      
-      // Remove the invalid session from localStorage
-      const existing = getRecentSessionsFromStorage();
-      const filtered = existing.filter(s => s.sessionId !== sessionId);
-      localStorage.setItem('threadscout_recent_sessions', JSON.stringify(filtered));
-      localStorage.removeItem(`threadscout_session_${sessionId}`);
-      setRecentSessions(filtered);
+  const handleDeleteSession = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation(); // Prevent loading the scan when clicking delete
+    if (window.confirm('Are you sure you want to delete this scan? This action cannot be undone.')) {
+      deleteSession(sessionId);
     }
   };
 
@@ -684,7 +576,7 @@ export default function Dashboard() {
                           className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer ${
                             session.sessionId.startsWith('sample_') ? 'bg-blue-50' : 'bg-gray-50'
                           }`}
-                          onClick={() => loadPreviousScan(session.sessionId)}
+                          onClick={() => handleLoadPreviousScan(session.sessionId)}
                         >
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
@@ -705,8 +597,18 @@ export default function Dashboard() {
                               {session.scanParams.subs.length > 2 && '...'}
                             </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatTimeAgo(session.createdAt)}
+                          <div className="flex items-center gap-2">
+                            <div className="text-xs text-muted-foreground">
+                              {formatTimeAgo(session.createdAt)}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => handleDeleteSession(e, session.sessionId)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -730,7 +632,7 @@ export default function Dashboard() {
                           className={`border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${
                             session.sessionId.startsWith('sample_') ? 'bg-blue-50 border-blue-200' : ''
                           }`}
-                          onClick={() => loadPreviousScan(session.sessionId)}
+                          onClick={() => handleLoadPreviousScan(session.sessionId)}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -747,9 +649,19 @@ export default function Dashboard() {
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              {formatTimeAgo(session.createdAt)}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {formatTimeAgo(session.createdAt)}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                onClick={(e) => handleDeleteSession(e, session.sessionId)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                           
                           <div className="text-sm font-medium mb-1">

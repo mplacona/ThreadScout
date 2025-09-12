@@ -1,5 +1,5 @@
 export function extractLinks(text: string): string[] {
-  const urlRegex = /https?:\/\/[^\s<>"\[\]{}|\\^`]+/gi;
+  const urlRegex = /https?:\/\/[^\s<>"[\]{}|\\^`]+/gi;
   return text.match(urlRegex) || [];
 }
 

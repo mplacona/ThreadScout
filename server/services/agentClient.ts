@@ -1,4 +1,5 @@
 import type { FullThread, RulesSummary } from './redditClient.js';
+import { logger } from '../utils/logger.js';
 
 export interface AgentResponse {
   score: number;
@@ -26,19 +27,19 @@ export class AgentClient {
     thread: FullThread,
     rules: RulesSummary
   ): Promise<AgentResponse> {
-    console.log(`🤖 AgentClient.scoreAndDraft called for thread: ${thread.title}`);
-    console.log(`📊 Thread permalink: ${thread.permalink}`);
+    logger.agent.info(`scoreAndDraft called for thread: ${thread.title}`);
+    logger.agent.debug(`Thread permalink: ${thread.permalink}`);
     
     if (!this.endpointUrl || !this.apiKey) {
       throw new Error('Agent credentials not configured');
     }
     
-    console.log(`🌐 Calling real agent at: ${this.endpointUrl}/api/v1/chat/completions`);
+    logger.agent.info(`Calling real agent at: ${this.endpointUrl}/api/v1/chat/completions`);
 
     try {
       // Send just the Reddit thread URL with .json - let the agent handle everything
       const redditJsonUrl = `https://www.reddit.com${thread.permalink}.json`;
-      console.log(`🔗 Sending Reddit JSON URL to agent: ${redditJsonUrl}`);
+      logger.agent.debug(`Sending Reddit JSON URL to agent: ${redditJsonUrl}`);
       
       const chatRequest = {
         messages: [
@@ -52,8 +53,7 @@ export class AgentClient {
         stream: false
       };
 
-      console.log('📤 Full request payload being sent to agent:');
-      console.log(JSON.stringify(chatRequest, null, 2));
+      logger.agent.debug('Full request payload being sent to agent:', chatRequest);
 
       const response = await fetch(`${this.endpointUrl}/api/v1/chat/completions`, {
         method: 'POST',
@@ -66,36 +66,35 @@ export class AgentClient {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error');
-        console.error(`Agent API error ${response.status}: ${errorText}`);
+        logger.agent.error(`Agent API error ${response.status}: ${errorText}`);
         throw new Error(`Agent API error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log(`✅ Agent response received, processing...`);
-      console.log('📥 Raw agent response:');
-      console.log(JSON.stringify(data, null, 2));
+      logger.agent.info('Agent response received, processing...');
+      logger.agent.debug('Raw agent response:', data);
       
       // Parse the agent response and convert to our format
       const agentResponse = this.parseAgentResponse(data);
       
       return agentResponse;
     } catch (error: unknown) {
-      console.error('Agent client error:', error);
+      logger.agent.error('Agent client error:', error);
       
       // Check if it's a rate limit error
       if (error instanceof Error && error.message.includes('429')) {
-        console.log('🚦 Rate limit detected - throwing error instead of using mock');
+        logger.agent.warn('Rate limit detected - throwing error instead of using mock');
         throw new Error('Rate limit exceeded - please try again in a moment');
       }
       
       // For other errors, still throw instead of using mock
-      console.log('❌ Agent API failed - throwing error instead of using mock');
+      logger.agent.error('Agent API failed - throwing error instead of using mock');
       throw error;
     }
   }
 
 
-  private parseAgentResponse(data: any): AgentResponse {
+  private parseAgentResponse(data: { choices?: Array<{ message?: { content?: string } }> }): AgentResponse {
     try {
       // The response should be in the format: { choices: [{ message: { content: "..." } }] }
       const content = data.choices?.[0]?.message?.content;
@@ -103,19 +102,16 @@ export class AgentClient {
         throw new Error('No content in agent response');
       }
 
-      console.log('🔍 Agent response content (before parsing):');
-      console.log(content);
+      logger.agent.debug('Agent response content (before parsing):', { content });
 
       // Try to parse the JSON content
-      let parsed: any;
+      let parsed: unknown;
       try {
         parsed = JSON.parse(content);
-        console.log('✅ Successfully parsed agent JSON');
+        logger.agent.debug('Successfully parsed agent JSON');
       } catch (parseError) {
-        console.warn('Failed to parse agent JSON response, attempting to fix common issues...');
-        console.error('Parse error:', parseError);
-        console.log('Raw content causing error:');
-        console.log(content);
+        logger.agent.warn('Failed to parse agent JSON response, attempting to fix common issues...', parseError);
+        logger.agent.debug('Raw content causing error:', { content });
         
         // Try to fix common JSON issues
         let fixedContent = content;
@@ -134,8 +130,8 @@ export class AgentClient {
         fixedContent = fixedContent.replace(/]\s*\n\s*"/g, '],\n"');
         
         // Fix specific array comma issues (based on the error at position 782)
-        fixedContent = fixedContent.replace(/"\s*\n\s*\]/g, '"\n]');
-        fixedContent = fixedContent.replace(/(\w+"\s*)\n(\s*\])/g, '$1$2');
+        fixedContent = fixedContent.replace(/"\s*\n\s*]/g, '"\n]');
+        fixedContent = fixedContent.replace(/(\w+"\s*)\n(\s*])/g, '$1$2');
         
         // Fix unescaped quotes in strings (more conservative approach)
         fixedContent = fixedContent.replace(/: "([^"]*)"([^",:}\]]*)"([^",:}\]]*)/g, ': "$1\\"$2\\"$3');
@@ -145,30 +141,31 @@ export class AgentClient {
         
         try {
           parsed = JSON.parse(fixedContent);
-          console.log('🔧 Successfully fixed and parsed JSON');
+          logger.agent.debug('Successfully fixed and parsed JSON');
         } catch (secondError) {
-          console.error('Still failed to parse after fixes:', secondError);
+          logger.agent.error('Still failed to parse after fixes:', secondError);
           
           // Last resort: try to extract a valid JSON object using regex
           try {
             const jsonMatch = fixedContent.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
               let extractedJson = jsonMatch[0];
-              // Try one more time with more aggressive fixes
-              extractedJson = extractedJson.replace(/([^,{\[s])\s*\n\s*"/g, '$1,\n"');
-              extractedJson = extractedJson.replace(/([^,{\[s])\s*\n\s*]/g, '$1\n]');
+            // Try one more time with more aggressive fixes
+            extractedJson = extractedJson.replace(/([^,{[s])\s*\n\s*"/g, '$1,\n"');
+            extractedJson = extractedJson.replace(/([^,{[s])\s*\n\s*]/g, '$1\n]');
               parsed = JSON.parse(extractedJson);
-              console.log('🔧 Successfully extracted and parsed JSON');
+              logger.agent.debug('Successfully extracted and parsed JSON');
             } else {
               throw new Error('No JSON object found');
             }
           } catch (finalError) {
-            console.error('Final parsing attempt failed:', finalError);
-            console.log('Content excerpt around error:');
-            const errorPos = (secondError as any).message.match(/position (\d+)/)?.[1];
+            logger.agent.error('Final parsing attempt failed:', finalError);
+            const errorPos = (secondError as Error).message.match(/position (\d+)/)?.[1];
             if (errorPos) {
               const pos = parseInt(errorPos);
-              console.log(fixedContent.substring(Math.max(0, pos - 50), pos + 50));
+              logger.agent.debug('Content excerpt around error:', {
+                excerpt: fixedContent.substring(Math.max(0, pos - 50), pos + 50)
+              });
             }
             throw new Error('Invalid JSON in agent response');
           }
@@ -177,26 +174,28 @@ export class AgentClient {
 
       // Validate the parsed response has the expected structure
       if (this.isValidAgentResponse(parsed)) {
-        console.log(`🎯 Agent provided score: ${parsed.score}/100`);
+        logger.agent.info(`Agent provided score: ${parsed.score}/100`);
         return parsed;
       } else {
-        console.warn('Agent response missing required fields');
+        logger.agent.warn('Agent response missing required fields');
         throw new Error('Invalid agent response structure');
       }
     } catch (error) {
-      console.warn('Error parsing agent response:', error);
+      logger.agent.warn('Error parsing agent response:', error);
       throw new Error('Failed to parse agent response');
     }
   }
 
-  private isValidAgentResponse(data: any): data is AgentResponse {
+  private isValidAgentResponse(data: unknown): data is AgentResponse {
+    if (!data || typeof data !== 'object') return false;
+    const obj = data as Record<string, unknown>;
     return (
-      typeof data.score === 'number' &&
-      typeof data.whyFit === 'string' &&
-      Array.isArray(data.rulesSummary) &&
-      Array.isArray(data.risks) &&
-      typeof data.variantA?.text === 'string' &&
-      typeof data.variantB?.text === 'string'
+      typeof obj.score === 'number' &&
+      typeof obj.whyFit === 'string' &&
+      Array.isArray(obj.rulesSummary) &&
+      Array.isArray(obj.risks) &&
+      typeof (obj.variantA as Record<string, unknown>)?.text === 'string' &&
+      typeof (obj.variantB as Record<string, unknown>)?.text === 'string'
     );
   }
 
