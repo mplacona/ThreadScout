@@ -1,0 +1,4 @@
+packages:
+  - name: validate-links
+    environment:
+      NODE_ENV: production
