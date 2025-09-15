@@ -1,4 +1,4 @@
-import { enforceOneLink, enforceAllowlist } from '../../shared/validators.js';
+import { enforceOneLink, enforceAllowlist } from './shared/validators.js';
 
 interface ValidateLinksRequest {
   text: string;
