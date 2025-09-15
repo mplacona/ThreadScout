@@ -15,6 +15,9 @@ import outcomesRoutes from './routes/outcomes.js';
 import toolsRoutes from './routes/tools.js';
 import subredditsRoutes from './routes/subreddits.js';
 
+// Import startup banner
+import { displayStartupBanner, displayServerError } from './utils/startup-banner.js';
+
 const app = new Hono();
 
 // Basic CORS headers
@@ -92,25 +95,30 @@ app.onError((err, c) => {
   }, 500);
 });
 
-const port = parseInt(process.env.PORT || '8080');
+const port = parseInt(process.env.PORT || '3000');
 
-console.log(`Starting ThreadScout server on port ${port}...`);
-console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-
-// Log configuration status
+// Gather configuration status
 const hasRedditCreds = !!(process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET);
 const hasAgentCreds = !!(process.env.AGENT_ENDPOINT_URL && process.env.AGENT_API_KEY);
 const hasSpacesCreds = !!(process.env.SPACES_KEY && process.env.SPACES_SECRET);
+const hasAgentTools = process.env.FEATURE_AGENT_TOOLS === 'true';
+const environment = process.env.NODE_ENV || 'development';
 
-console.log('Configuration status:');
-console.log(`- Reddit API: ${hasRedditCreds ? '✓' : '✗ (using fallback)'}`);
-console.log(`- Agent API: ${hasAgentCreds ? '✓' : '✗ (using mock)'}`);
-console.log(`- Spaces Storage: ${hasSpacesCreds ? '✓' : '✗ (using local storage)'}`);
-console.log(`- Agent Tools: ${process.env.FEATURE_AGENT_TOOLS === 'true' ? '✓' : '✗'}`);
-
-serve({
-  fetch: app.fetch,
-  port,
-}, (info) => {
-  console.log(`🚀 ThreadScout server running at http://localhost:${info.port}`);
-});
+try {
+  serve({
+    fetch: app.fetch,
+    port,
+  }, (info) => {
+    displayStartupBanner({
+      port: info.port,
+      environment,
+      hasRedditCreds,
+      hasAgentCreds,
+      hasSpacesCreds,
+      hasAgentTools
+    });
+  });
+} catch (error) {
+  displayServerError(error as Error, port);
+  process.exit(1);
+}
