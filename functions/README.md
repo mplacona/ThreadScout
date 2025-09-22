@@ -15,7 +15,7 @@ ThreadScout functions are designed to work together as a cohesive system for:
 
 ### Tools Available
 
-- **validate-links**: Validates and cleans text content to ensure it complies with link posting policies. It enforces a maximum of one link per text and restricts links to only allowed domains from a configurable allowlist.
+- `validate-links`: Validates and cleans text content to ensure it complies with link posting policies. It enforces a maximum of one link per text and restricts links to only allowed domains from a configurable allowlist.
 
 ### Tool Usage Guidelines
 
