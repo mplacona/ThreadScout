@@ -15,7 +15,7 @@ Find high-intent Reddit threads where your product can help, summarize subreddit
 
 ### Frontend
 - **Vite + React + TypeScript** with Tailwind CSS and shadcn/ui
-- **Two Routes**: Dashboard (scan configuration and results) and Thread (detailed analysis and drafting)
+- **Two Main Routes**: Dashboard (scan configuration and results) and Thread (detailed analysis and drafting)
 
 ### Backend
 - **Hono** server with TypeScript
@@ -41,8 +41,8 @@ Find high-intent Reddit threads where your product can help, summarize subreddit
 
 2. **Configure Environment** (optional for demo)
    ```bash
-   cp .env.example .env
-   # Edit .env with your API credentials (see below)
+   # Create .env file with your API credentials (see configuration section below)
+   # The app works without configuration using public APIs and mock responses
    ```
 
 3. **Start Development**
@@ -70,7 +70,7 @@ npm run preview  # Preview production build
 
 ## Environment Configuration
 
-### Required for Production if not on App Platform
+### Required for Production (if not using local storage)
 ```bash
 # DigitalOcean Spaces (for persistent storage)
 SPACES_KEY=your_spaces_key
@@ -120,8 +120,8 @@ SAFE_MODE=true           # Force help-only drafts
 - **Variant B**: Help + one allowlisted link + disclosure (if required)
 
 ### 5. Outcome Tracking
-- Paste your Reddit comment URL after posting
-- Automated checks track upvotes, replies, and removal status
+- Paste your Reddit comment URL after posting to track performance
+- System tracks comment status (alive/removed) and basic metrics
 
 ## Storage Structure
 
