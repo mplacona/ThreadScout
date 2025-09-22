@@ -2,3 +2,6 @@ packages:
   - name: validate-links
     environment:
       NODE_ENV: production
+  - name: fetch-rules
+    environment:
+      NODE_ENV: production

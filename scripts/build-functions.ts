@@ -20,8 +20,7 @@ async function buildFunctions() {
       const stat = await fs.stat(functionPath);
       
       if (stat.isDirectory()) {
-        console.log(`Building function: ${functionDir}`);
-        await copySharedDependencies(functionPath);
+        console.log(`✓ Function ready: ${functionDir}`);
       }
     }
     
@@ -37,29 +36,7 @@ async function buildFunctions() {
   }
 }
 
-async function copySharedDependencies(functionPath: string) {
-  const sharedDir = 'functions/shared';
-  const targetSharedDir = join(functionPath, 'shared');
-  
-  try {
-    // Create shared directory in function
-    await fs.mkdir(targetSharedDir, { recursive: true });
-    
-    // Copy shared files
-    const sharedFiles = await fs.readdir(sharedDir);
-    
-    for (const file of sharedFiles) {
-      const sourcePath = join(sharedDir, file);
-      const targetPath = join(targetSharedDir, file);
-      
-      const content = await fs.readFile(sourcePath, 'utf-8');
-      await fs.writeFile(targetPath, content);
-    }
-    
-    console.log(`  ✓ Copied shared dependencies to ${functionPath}`);
-  } catch (error) {
-    console.warn(`  ⚠ Warning: Could not copy shared dependencies to ${functionPath}:`, error);
-  }
-}
+// Shared dependencies are embedded in each function for DigitalOcean Functions
+// No copying needed since functions are self-contained
 
 buildFunctions();
