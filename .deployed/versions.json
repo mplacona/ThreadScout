@@ -3,18 +3,26 @@
     "apihost": "https://faas-nyc1-2ef2e6cc.doserverless.co",
     "namespace": "fn-b1cf7e4d-ef9e-4c82-a6dc-82d6f4c84c11",
     "packageVersions": {
+      "fetch-rules": {
+        "version": "0.0.1",
+        "digest": "927deea7a67f420579d89c122242045b9c08b815757084bf7d4fe5a9109760bf"
+      },
       "validate-links": {
-        "version": "0.0.6",
+        "version": "0.0.7",
         "digest": "43246518da6cb89901cc0ec9e0b030b35eb12b994c81170680218cbcf8e28e45"
       }
     },
     "actionVersions": {
+      "fetch-rules/index": {
+        "version": "0.0.1",
+        "digest": "89d47f107474cfd3fbb190442d91b5847792d24556a6646178cf3ceb15127062"
+      },
       "validate-links/index": {
-        "version": "0.0.6",
+        "version": "0.0.7",
         "digest": "39b6aa2324aa04d43009e2535ea2475b77eef4f419ec601308f361bd3f7bd5bd"
       },
       "validate-links/shared": {
-        "version": "0.0.6",
+        "version": "0.0.7",
         "digest": "8db9c5ef0084bf2e54b04a9f757a765d0f39b093e0210b04d5cbfa1e35605674"
       }
     }

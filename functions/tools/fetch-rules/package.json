@@ -1,7 +1,7 @@
 {
-  "name": "validate-links",
+  "name": "fetch-rules",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.ts",
+  "main": "index.js",
   "dependencies": {}
 }
