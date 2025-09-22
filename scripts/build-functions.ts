@@ -6,11 +6,9 @@ async function buildFunctions() {
   
   try {
     const functionsDir = 'functions/tools';
-    const sharedDir = 'functions/shared';
     
-    // Ensure directories exist
+    // Ensure directory exists
     await fs.mkdir(functionsDir, { recursive: true });
-    await fs.mkdir(sharedDir, { recursive: true });
     
     // Get list of function directories
     const functionDirs = await fs.readdir(functionsDir);
