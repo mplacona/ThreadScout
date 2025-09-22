@@ -1,4 +1,4 @@
-# ThreadScout Functions
+# ThreadScout - DigitalOcean AI Agent Functions
 
 This directory contains serverless functions that power ThreadScout's Reddit thread analysis and content generation capabilities. ThreadScout helps identify high-intent Reddit threads where your product can provide value and generates compliant, helpful responses.
 
