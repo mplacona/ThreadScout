@@ -13,6 +13,8 @@ Find high-intent Reddit threads where your product can help, summarize subreddit
 
 ## Architecture
 
+![ThreadScout Architecture Diagram](https://github.com/user-attachments/assets/4a49eb50-5ada-49e5-9e92-dc2d77eefef3)
+
 ### Frontend
 - **Vite + React + TypeScript** with Tailwind CSS and shadcn/ui
 - **Two Main Routes**: Dashboard (scan configuration and results) and Thread (detailed analysis and drafting)
@@ -23,6 +25,16 @@ Find high-intent Reddit threads where your product can help, summarize subreddit
 - **Reddit Integration**: OAuth or public JSON endpoints
 - **Agent Integration**: Gradient AI or mock responses
 - **Validation**: Server-side link and disclosure enforcement
+
+### System Components
+
+The diagram above shows how ThreadScout's components work together:
+
+- **Frontend (React+Vite)**: User interface with API wrapper and client libraries
+- **Hono API Server**: Central backend with organized routes, schemas, and services
+- **External Services**: Reddit API for data and Gradient AI for thread analysis
+- **Serverless Functions**: Specialized tools for rule fetching and link validation
+- **Storage Layer**: Flexible storage supporting both local development and cloud production
 
 ## Quick Start
 
