@@ -68,7 +68,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.2",
     "embla-carousel-react": "^8.6.0",
-    "hono": "^4.0.10",
+    "hono": "^4.9.8",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
