@@ -3,6 +3,19 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "Find high-intent Reddit threads where your product can help, with AI-powered scoring and transparent reply drafting",
+  "keywords": ["reddit", "marketing", "ai", "content-marketing", "lead-generation", "social-media", "typescript", "react", "hono"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mplacona/ThreadScout.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mplacona/ThreadScout/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "concurrently -k --raw \"vite --logLevel warn\" \"tsx server/index.ts\"",
     "build": "vite build && tsx scripts/build-server.ts",

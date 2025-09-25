@@ -8,8 +8,8 @@ export class RedditClient {
     if (this.isDevelopment) {
       return this.getMockThreads(filters);
     }
-    
-    // TODO: Implement actual Reddit API calls
+
+    // Reddit API implementation would go here
     throw new Error("Reddit API not implemented yet");
   }
 
@@ -17,8 +17,8 @@ export class RedditClient {
     if (this.isDevelopment) {
       return this.getMockRules(subreddit);
     }
-    
-    // TODO: Implement actual Reddit API calls
+
+    // Reddit API implementation would go here
     throw new Error("Reddit API not implemented yet");
   }
 

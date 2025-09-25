@@ -32,10 +32,6 @@ export interface OpportunityScore {
   score: number;
   why_fit: string;
   rule_risk: string[];
-  intent_clarity: number;
-  product_fit: number;
-  timing_score: number;
-  community_safety: number;
 }
 
 export interface ReplyDraft {
