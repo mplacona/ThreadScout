@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.540.0",
-    "@hono/node-server": "^1.8.2",
+    "@hono/node-server": "^1.19.4",
     "@hono/zod-validator": "^0.7.2",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
