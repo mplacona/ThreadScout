@@ -100,7 +100,64 @@ async function getSubredditRules(sub, userAgent = 'ThreadScout/1.0') {
 
 function main(args) {
     try {
-        const { sub, subreddit } = args;
+        // Handle both web requests (GET/POST) and direct invocation
+        let sub, subreddit;
+
+        if (args.__ow_method) {
+            // This is a web request
+            const method = args.__ow_method.toUpperCase();
+
+            if (method === 'GET') {
+                // Handle GET request - parameters from query string
+                sub = args.sub;
+                subreddit = args.subreddit;
+            } else if (method === 'POST') {
+                // Handle POST request - parameters might be directly in args or in body
+                if (args.sub || args.subreddit) {
+                    // Parameters are directly available (common in OpenWhisk)
+                    sub = args.sub;
+                    subreddit = args.subreddit;
+                } else if (args.__ow_body) {
+                    // Parameters are in body
+                    try {
+                        let body = '{}';
+                        // Try to decode as base64 first, fall back to direct string
+                        try {
+                            body = Buffer.from(args.__ow_body, 'base64').toString();
+                        } catch (decodeError) {
+                            body = args.__ow_body;
+                        }
+                        const data = JSON.parse(body);
+                        sub = data.sub;
+                        subreddit = data.subreddit;
+                    } catch (parseError) {
+                        return {
+                            statusCode: 400,
+                            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                            body: JSON.stringify({
+                                error: 'Invalid JSON in request body',
+                                details: parseError.message,
+                                receivedBody: args.__ow_body ? args.__ow_body.substring(0, 100) : 'null'
+                            })
+                        };
+                    }
+                } else {
+                    // No parameters found
+                    sub = undefined;
+                    subreddit = undefined;
+                }
+            } else {
+                return {
+                    statusCode: 405,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                    body: JSON.stringify({ error: 'Method not allowed' })
+                };
+            }
+        } else {
+            // Direct invocation (non-web)
+            sub = args.sub;
+            subreddit = args.subreddit;
+        }
 
         // Accept either 'sub' or 'subreddit' parameter
         const subredditName = sub || subreddit;
@@ -108,7 +165,7 @@ function main(args) {
         if (!subredditName || typeof subredditName !== 'string') {
             return {
                 statusCode: 400,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
                 body: JSON.stringify({
                     error: 'sub parameter is required and must be a string (e.g., "webdev")'
                 })
@@ -122,7 +179,7 @@ function main(args) {
         if (!/^[A-Za-z0-9_]+$/.test(cleanSubreddit)) {
             return {
                 statusCode: 400,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
                 body: JSON.stringify({
                     error: 'Invalid subreddit name format. Use only letters, numbers, and underscores.'
                 })
@@ -142,7 +199,7 @@ function main(args) {
                 console.error('Error in fetch-rules function:', error);
                 return {
                     statusCode: 500,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
                     body: JSON.stringify({
                         error: 'Failed to fetch subreddit rules',
                         details: error.message
@@ -153,7 +210,7 @@ function main(args) {
         console.error('Error in fetch-rules function:', error);
         return {
             statusCode: 500,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
             body: JSON.stringify({
                 error: 'Internal server error',
                 details: error.message
@@ -161,5 +218,3 @@ function main(args) {
         };
     }
 }
-
-exports.main = main;

@@ -361,7 +361,7 @@ export class RedditClient {
 
     try {
       // Use Reddit's public search API to find subreddits (no auth needed)
-      const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=5&type=sr`;
+      const url = `https://www.reddit.com/subreddits/search.json?q=${encodeURIComponent(query)}&limit=5&type=sr&include_over_18=off`;
       
       // Make a direct fetch request with proper headers (bypass OAuth)
       const response = await fetch(url, {
