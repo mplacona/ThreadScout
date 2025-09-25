@@ -1,7 +1,11 @@
 packages:
-  - name: validate-links
+  - name: threadscout
     environment:
       NODE_ENV: production
-  - name: fetch-rules
-    environment:
-      NODE_ENV: production
+    functions:
+      - name: validate-links
+        main: validate-links.js
+        runtime: nodejs:18
+      - name: fetch-rules
+        main: fetch-rules.js
+        runtime: nodejs:18
