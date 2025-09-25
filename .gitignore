@@ -16,6 +16,9 @@ dist-ssr
 # Local data storage
 .data/*
 
+# DigitalOcean Functions deployment artifacts
+.deployed
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
