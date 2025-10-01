@@ -143,14 +143,34 @@ export default function Dashboard() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setPresentationMode(prev => !prev);
-        toast.info(presentationMode ? 'Presentation mode off' : 'Presentation mode on');
+        setPresentationMode(prev => {
+          const newMode = !prev;
+          if (newMode) {
+            // Scroll to bottom when entering presentation mode
+            setTimeout(() => {
+              window.scrollTo({
+                top: document.documentElement.scrollHeight,
+                behavior: 'smooth'
+              });
+            }, 300);
+          } else {
+            // Scroll to top when exiting presentation mode
+            setTimeout(() => {
+              window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+              });
+            }, 100);
+          }
+          toast.info(newMode ? 'Presentation mode on' : 'Presentation mode off');
+          return newMode;
+        });
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [presentationMode]);
+  }, []);
 
   const handleKeywordToggle = (keyword: string) => {
     setSelectedKeywords((prev) =>
