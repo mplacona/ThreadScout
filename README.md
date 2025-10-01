@@ -11,6 +11,10 @@ Find high-intent Reddit threads where your product can help, summarize subreddit
 - **Link Validation**: Enforces one-link max and domain allowlist
 - **Outcome Tracking**: Track comment performance after posting
 
+## App
+![ThreadScout App Diagram](https://github.com/user-attachments/assets/51a9a2ac-8f69-4c30-8866-c82fcdaab35e)
+
+
 ## Architecture
 
 ![ThreadScout Architecture Diagram](https://github.com/user-attachments/assets/4a49eb50-5ada-49e5-9e92-dc2d77eefef3)
