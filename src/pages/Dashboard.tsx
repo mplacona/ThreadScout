@@ -61,6 +61,7 @@ export default function Dashboard() {
   } | null>(null);
   const [isResultsExpanded, setIsResultsExpanded] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [presentationMode, setPresentationMode] = useState(false);
 
   // Recent sessions hook
   const {
@@ -136,6 +137,20 @@ export default function Dashboard() {
       setIsResultsExpanded(true);
     }
   }, [results]);
+
+  // Keyboard shortcut for presentation mode (Cmd/Ctrl + K)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setPresentationMode(prev => !prev);
+        toast.info(presentationMode ? 'Presentation mode off' : 'Presentation mode on');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [presentationMode]);
 
   const handleKeywordToggle = (keyword: string) => {
     setSelectedKeywords((prev) =>
@@ -344,7 +359,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div
+      className={`container mx-auto p-6 max-w-7xl transition-all duration-300 ${
+        presentationMode ? 'scale-110 origin-top' : ''
+      }`}
+    >
       {/* Logo and Brand Header */}
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-4">
