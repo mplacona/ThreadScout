@@ -1,43 +1,113 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Search, TrendingUp, MessageCircle, ThumbsUp, ExternalLink, X, Eye, Copy, Clock, BarChart3, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { api, type ScanRequest, type ThreadSummary, type StreamingScanEvent, type RecentSession } from '@/lib/api';
-import { FormattedText } from '@/components/ui/formatted-text';
-import { SubredditAutocomplete } from '@/components/ui/subreddit-autocomplete';
-import { useRecentSessions } from '@/hooks/useRecentSessions';
-
+import React, { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  Search,
+  TrendingUp,
+  MessageCircle,
+  ThumbsUp,
+  ExternalLink,
+  X,
+  Eye,
+  Copy,
+  Clock,
+  BarChart3,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  api,
+  type ScanRequest,
+  type ThreadSummary,
+  type StreamingScanEvent,
+  type RecentSession,
+} from "@/lib/api";
+import { FormattedText } from "@/components/ui/formatted-text";
+import { SubredditAutocomplete } from "@/components/ui/subreddit-autocomplete";
+import { useRecentSessions } from "@/hooks/useRecentSessions";
 
 const COMMON_KEYWORDS = [
-  'help', 'problem', 'stuck', 'how to', 'best way', 'recommendations',
-  'tool', 'solution', 'advice', 'experience', 'struggling', 'analytics'
+  "help",
+  "problem",
+  "stuck",
+  "how to",
+  "best way",
+  "recommendations",
+  "tool",
+  "solution",
+  "advice",
+  "experience",
+  "struggling",
+  "analytics",
 ];
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<{ sessionId: string; threads: ThreadSummary[] } | null>(null);
-  
+  const [results, setResults] = useState<{
+    sessionId: string;
+    threads: ThreadSummary[];
+  } | null>(null);
+  const [isResultsExpanded, setIsResultsExpanded] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+
   // Recent sessions hook
-  const { recentSessions, saveSessionToStorage, loadPreviousScan, deleteSession } = useRecentSessions();
-  
+  const {
+    recentSessions,
+    saveSessionToStorage,
+    loadPreviousScan,
+    deleteSession,
+  } = useRecentSessions();
+
+  // Handle responsive layout
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   // Streaming scan state
-  const [scanStatus, setScanStatus] = useState<string>('');
-  const [scanProgress, setScanProgress] = useState<{ current: number; total: number } | null>(null);
+  const [scanStatus, setScanStatus] = useState<string>("");
+  const [scanProgress, setScanProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [cancelScan, setCancelScan] = useState<(() => Promise<boolean>) | null>(null);
-  
+  const [cancelScan, setCancelScan] = useState<(() => Promise<boolean>) | null>(
+    null
+  );
+
   // UI state for response previews
-  const [expandedResponses, setExpandedResponses] = useState<Set<string>>(new Set());
+  const [expandedResponses, setExpandedResponses] = useState<Set<string>>(
+    new Set()
+  );
 
   // Form state
-  const [selectedSubs, setSelectedSubs] = useState<string[]>(['linkedin', 'linkedinads', 'linkedintips']);
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>(['help', 'analytics']);
-  const [customKeyword, setCustomKeyword] = useState('');
+  const [selectedSubs, setSelectedSubs] = useState<string[]>([
+    "linkedin",
+    "linkedinads",
+    "linkedintips",
+  ]);
+  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([
+    "help",
+    "analytics",
+  ]);
+  const [customKeyword, setCustomKeyword] = useState("");
   const [lookbackHours, setLookbackHours] = useState(24);
   const [threadLimit, setThreadLimit] = useState(5);
   // Removed allowlist for simplicity - links allowed by default
@@ -48,38 +118,54 @@ export default function Dashboard() {
       saveSessionToStorage(results, {
         subs: selectedSubs,
         keywords: selectedKeywords,
-        lookbackHours
+        lookbackHours,
       });
     }
-  }, [results, isLoading, saveSessionToStorage, selectedSubs, selectedKeywords, lookbackHours]);
+  }, [
+    results,
+    isLoading,
+    saveSessionToStorage,
+    selectedSubs,
+    selectedKeywords,
+    lookbackHours,
+  ]);
 
+  // Auto-expand results panel when results arrive
+  useEffect(() => {
+    if (results && results.threads.length > 0) {
+      setIsResultsExpanded(true);
+    }
+  }, [results]);
 
   const handleKeywordToggle = (keyword: string) => {
-    setSelectedKeywords(prev => 
-      prev.includes(keyword) 
-        ? prev.filter(k => k !== keyword)
+    setSelectedKeywords((prev) =>
+      prev.includes(keyword)
+        ? prev.filter((k) => k !== keyword)
         : [...prev, keyword]
     );
   };
 
   const handleAddCustomKeyword = () => {
-    if (customKeyword.trim() && !selectedKeywords.includes(customKeyword.trim())) {
-      setSelectedKeywords(prev => [...prev, customKeyword.trim()]);
-      setCustomKeyword('');
+    if (
+      customKeyword.trim() &&
+      !selectedKeywords.includes(customKeyword.trim())
+    ) {
+      setSelectedKeywords((prev) => [...prev, customKeyword.trim()]);
+      setCustomKeyword("");
     }
   };
 
   const handleScan = async () => {
     if (selectedSubs.length === 0 || selectedKeywords.length === 0) {
-      toast.error('Please select at least one subreddit and keyword');
+      toast.error("Please select at least one subreddit and keyword");
       return;
     }
 
     setIsLoading(true);
-    setScanStatus('Initializing scan...');
+    setScanStatus("Initializing scan...");
     setScanProgress(null);
     setResults(null);
-    
+
     const request: ScanRequest = {
       subs: selectedSubs,
       keywords: selectedKeywords,
@@ -91,59 +177,79 @@ export default function Dashboard() {
       request,
       (event: StreamingScanEvent) => {
         switch (event.type) {
-          case 'status':
-            setScanStatus(event.message || '');
+          case "status":
+            setScanStatus(event.message || "");
             break;
-          
-          case 'progress':
-            setScanProgress({ current: event.current || 0, total: event.total || 0 });
-            setScanStatus(event.message || '');
+
+          case "progress":
+            setScanProgress({
+              current: event.current || 0,
+              total: event.total || 0,
+            });
+            setScanStatus(event.message || "");
             break;
-          
-          case 'thread':
+
+          case "thread":
             if (event.thread) {
-              setResults(prev => ({
+              setResults((prev) => ({
                 sessionId,
-                threads: prev ? [...prev.threads, event.thread!] : [event.thread!]
+                threads: prev
+                  ? [...prev.threads, event.thread!]
+                  : [event.thread!],
               }));
             }
             break;
-          
-          case 'completed':
+
+          case "completed":
             // Sort threads by score (highest to lowest) when streaming completes
-            setResults(prev => prev ? ({
-              ...prev,
-              threads: [...prev.threads].sort((a, b) => b.score - a.score)
-            }) : prev);
+            setResults((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    threads: [...prev.threads].sort(
+                      (a, b) => b.score - a.score
+                    ),
+                  }
+                : prev
+            );
             setIsLoading(false);
             setCancelScan(null);
             setCurrentSessionId(null);
-            setScanStatus('');
+            setScanStatus("");
             setScanProgress(null);
-            toast.success(event.message || `Scan completed! Found ${event.totalThreads || 0} threads.`);
+            toast.success(
+              event.message ||
+                `Scan completed! Found ${event.totalThreads || 0} threads.`
+            );
             break;
-          
-          case 'cancelled':
+
+          case "cancelled":
             // Sort threads by score (highest to lowest) even when cancelled
-            setResults(prev => prev ? ({
-              ...prev,
-              threads: [...prev.threads].sort((a, b) => b.score - a.score)
-            }) : prev);
+            setResults((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    threads: [...prev.threads].sort(
+                      (a, b) => b.score - a.score
+                    ),
+                  }
+                : prev
+            );
             setIsLoading(false);
             setCancelScan(null);
             setCurrentSessionId(null);
-            setScanStatus('');
+            setScanStatus("");
             setScanProgress(null);
-            toast.info(event.message || 'Scan was cancelled');
+            toast.info(event.message || "Scan was cancelled");
             break;
-          
-          case 'error':
+
+          case "error":
             setIsLoading(false);
             setCancelScan(null);
             setCurrentSessionId(null);
-            setScanStatus('');
+            setScanStatus("");
             setScanProgress(null);
-            toast.error(event.details || event.error || 'Scan failed');
+            toast.error(event.details || event.error || "Scan failed");
             break;
         }
       }
@@ -155,13 +261,15 @@ export default function Dashboard() {
     try {
       await promise;
     } catch (error) {
-      console.error('Scan error:', error);
+      console.error("Scan error:", error);
       setIsLoading(false);
       setCancelScan(null);
       setCurrentSessionId(null);
-      setScanStatus('');
+      setScanStatus("");
       setScanProgress(null);
-      toast.error(error instanceof Error ? error.message : 'Failed to scan threads');
+      toast.error(
+        error instanceof Error ? error.message : "Failed to scan threads"
+      );
     }
   };
 
@@ -169,13 +277,13 @@ export default function Dashboard() {
     if (cancelScan) {
       const cancelled = await cancelScan();
       if (cancelled) {
-        toast.info('Cancelling scan...');
+        toast.info("Cancelling scan...");
       }
     }
   };
 
   const toggleResponseExpansion = (threadId: string) => {
-    setExpandedResponses(prev => {
+    setExpandedResponses((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(threadId)) {
         newSet.delete(threadId);
@@ -191,7 +299,7 @@ export default function Dashboard() {
       await navigator.clipboard.writeText(text);
       toast.success(`${label} copied to clipboard!`);
     } catch (error) {
-      toast.error('Failed to copy to clipboard');
+      toast.error("Failed to copy to clipboard");
     }
   };
 
@@ -204,28 +312,32 @@ export default function Dashboard() {
 
   const handleDeleteSession = (e: React.MouseEvent, sessionId: string) => {
     e.stopPropagation(); // Prevent loading the scan when clicking delete
-    if (window.confirm('Are you sure you want to delete this scan? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this scan? This action cannot be undone."
+      )
+    ) {
       deleteSession(sessionId);
     }
   };
 
   const formatTimeAgo = (timestamp: number) => {
     const hoursAgo = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60));
-    if (hoursAgo < 1) return 'Just now';
+    if (hoursAgo < 1) return "Just now";
     if (hoursAgo < 24) return `${hoursAgo}h ago`;
     const daysAgo = Math.floor(hoursAgo / 24);
     return `${daysAgo}d ago`;
   };
 
   const getScoreBadgeVariant = (score: number) => {
-    if (score >= 70) return 'default'; // green
-    if (score >= 50) return 'secondary'; // yellow
-    return 'outline'; // red
+    if (score >= 70) return "default"; // green
+    if (score >= 50) return "secondary"; // yellow
+    return "outline"; // red
   };
 
   const formatThreadTimeAgo = (createdUtc: number) => {
     const hoursAgo = Math.floor((Date.now() / 1000 - createdUtc) / 3600);
-    if (hoursAgo < 1) return 'Just now';
+    if (hoursAgo < 1) return "Just now";
     if (hoursAgo < 24) return `${hoursAgo}h ago`;
     const daysAgo = Math.floor(hoursAgo / 24);
     return `${daysAgo}d ago`;
@@ -237,11 +349,7 @@ export default function Dashboard() {
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-3">
-            <img 
-              src="/logo.svg" 
-              alt="ThreadScout Logo" 
-              className="h-12 w-12"
-            />
+            <img src="/logo.svg" alt="ThreadScout Logo" className="h-12 w-12" />
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 ThreadScout
@@ -254,13 +362,21 @@ export default function Dashboard() {
         </p>
       </div>
 
-
       {/* Dashboard Content */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold mb-2">New Scan</h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div
+        className="grid gap-6 transition-all duration-300"
+        style={{
+          gridTemplateColumns: isLargeScreen
+            ? isResultsExpanded
+              ? "1fr 1fr"
+              : "3fr 1fr"
+            : "1fr",
+        }}
+      >
         {/* Scan Configuration */}
         <Card>
           <CardHeader>
@@ -289,10 +405,12 @@ export default function Dashboard() {
             <div>
               <Label className="text-base font-medium">Keywords</Label>
               <div className="flex flex-wrap gap-2 mt-2 mb-3">
-                {COMMON_KEYWORDS.map(keyword => (
+                {COMMON_KEYWORDS.map((keyword) => (
                   <Badge
                     key={keyword}
-                    variant={selectedKeywords.includes(keyword) ? 'default' : 'outline'}
+                    variant={
+                      selectedKeywords.includes(keyword) ? "default" : "outline"
+                    }
                     className="cursor-pointer"
                     onClick={() => handleKeywordToggle(keyword)}
                   >
@@ -305,7 +423,9 @@ export default function Dashboard() {
                   placeholder="Add custom keyword..."
                   value={customKeyword}
                   onChange={(e) => setCustomKeyword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustomKeyword()}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleAddCustomKeyword()
+                  }
                 />
                 <Button variant="outline" onClick={handleAddCustomKeyword}>
                   Add
@@ -313,10 +433,16 @@ export default function Dashboard() {
               </div>
               {selectedKeywords.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-1">Selected:</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Selected:
+                  </p>
                   <div className="flex flex-wrap gap-1">
-                    {selectedKeywords.map(keyword => (
-                      <Badge key={keyword} variant="secondary" className="text-xs">
+                    {selectedKeywords.map((keyword) => (
+                      <Badge
+                        key={keyword}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {keyword}
                         <button
                           className="ml-1 hover:text-destructive"
@@ -343,7 +469,9 @@ export default function Dashboard() {
                   min="1"
                   max="168"
                   value={lookbackHours}
-                  onChange={(e) => setLookbackHours(parseInt(e.target.value) || 24)}
+                  onChange={(e) =>
+                    setLookbackHours(parseInt(e.target.value) || 24)
+                  }
                 />
               </div>
               <div>
@@ -354,7 +482,9 @@ export default function Dashboard() {
                   min="1"
                   max="50"
                   value={threadLimit}
-                  onChange={(e) => setThreadLimit(parseInt(e.target.value) || 5)}
+                  onChange={(e) =>
+                    setThreadLimit(parseInt(e.target.value) || 5)
+                  }
                 />
               </div>
             </div>
@@ -373,15 +503,19 @@ export default function Dashboard() {
                 </div>
                 {scanProgress && (
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%` }}
+                      style={{
+                        width: `${
+                          (scanProgress.current / scanProgress.total) * 100
+                        }%`,
+                      }}
                     ></div>
                   </div>
                 )}
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={handleCancelScan}
                     className="flex-1"
                     size="lg"
@@ -392,9 +526,11 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <Button 
-                onClick={handleScan} 
-                disabled={selectedSubs.length === 0 || selectedKeywords.length === 0} 
+              <Button
+                onClick={handleScan}
+                disabled={
+                  selectedSubs.length === 0 || selectedKeywords.length === 0
+                }
                 className="w-full"
                 size="lg"
               >
@@ -408,15 +544,37 @@ export default function Dashboard() {
         {/* Results */}
         <Card>
           <CardHeader>
-            <CardTitle>Results</CardTitle>
-            <CardDescription>
-              {isLoading && results ? 
-                `Found ${results.threads.length} threads (scanning...)` :
-                results ? 
-                `Found ${results.threads.length} threads` : 
-                'No scan results yet'
-              }
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Results</CardTitle>
+                <CardDescription>
+                  {isLoading && results
+                    ? `Found ${results.threads.length} threads (scanning...)`
+                    : results
+                    ? `Found ${results.threads.length} threads`
+                    : "No scan results yet"}
+                </CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsResultsExpanded(!isResultsExpanded)}
+                title={
+                  isResultsExpanded
+                    ? "Collapse results panel"
+                    : "Expand results panel"
+                }
+                className={
+                  !(results || recentSessions.length > 0) ? "invisible" : ""
+                }
+              >
+                {isResultsExpanded ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {results ? (
@@ -427,13 +585,19 @@ export default function Dashboard() {
                   </p>
                 ) : (
                   results.threads.map((thread) => (
-                    <div key={thread.thread.id} className="border rounded-lg p-4">
+                    <div
+                      key={thread.thread.id}
+                      className="border rounded-lg p-4"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
                             r/{thread.thread.sub}
                           </Badge>
-                          <Badge variant={getScoreBadgeVariant(thread.score)} title={thread.scoreHint}>
+                          <Badge
+                            variant={getScoreBadgeVariant(thread.score)}
+                            title={thread.scoreHint}
+                          >
                             {thread.score}
                           </Badge>
                         </div>
@@ -441,11 +605,11 @@ export default function Dashboard() {
                           {formatThreadTimeAgo(thread.thread.createdUtc)}
                         </span>
                       </div>
-                      
+
                       <h3 className="font-medium mb-2 line-clamp-2">
                         {thread.thread.title}
                       </h3>
-                      
+
                       <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                         <div className="flex items-center gap-1">
                           <ThumbsUp className="h-3 w-3" />
@@ -460,7 +624,7 @@ export default function Dashboard() {
                       <p className="text-sm text-muted-foreground mb-2">
                         {thread.whyFit}
                       </p>
-                      
+
                       <p className="text-xs text-blue-600 mb-3 italic">
                         Score rationale: {thread.scoreHint}
                       </p>
@@ -481,7 +645,11 @@ export default function Dashboard() {
                           </Badge>
                         )}
                         {thread.rules.notes.map((note, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs">
+                          <Badge
+                            key={i}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {note}
                           </Badge>
                         ))}
@@ -491,14 +659,24 @@ export default function Dashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => toggleResponseExpansion(thread.thread.id)}
+                          onClick={() =>
+                            toggleResponseExpansion(thread.thread.id)
+                          }
                         >
                           <Eye className="mr-1 h-3 w-3" />
-                          {expandedResponses.has(thread.thread.id) ? 'Hide' : 'Show'} Responses
+                          {expandedResponses.has(thread.thread.id)
+                            ? "Hide"
+                            : "Show"}{" "}
+                          Responses
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => window.open(`https://www.reddit.com${thread.thread.permalink}`, '_blank')}
+                          onClick={() =>
+                            window.open(
+                              `https://www.reddit.com${thread.thread.permalink}`,
+                              "_blank"
+                            )
+                          }
                         >
                           Open Thread
                           <ExternalLink className="ml-1 h-3 w-3" />
@@ -509,11 +687,18 @@ export default function Dashboard() {
                         <div className="space-y-3 mt-4 p-3 bg-gray-50 rounded-lg">
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-medium text-sm">Variant A (Safe Response)</h4>
+                              <h4 className="font-medium text-sm">
+                                Variant A (Safe Response)
+                              </h4>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => copyToClipboard(thread.variantA.text, 'Variant A')}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    thread.variantA.text,
+                                    "Variant A"
+                                  )
+                                }
                               >
                                 <Copy className="h-3 w-3" />
                               </Button>
@@ -526,12 +711,20 @@ export default function Dashboard() {
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="font-medium text-sm">
-                                Variant B {thread.rules.linksAllowed ? '(With Links)' : '(Safe Response)'}
+                                Variant B{" "}
+                                {thread.rules.linksAllowed
+                                  ? "(With Links)"
+                                  : "(Safe Response)"}
                               </h4>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => copyToClipboard(thread.variantB.text, 'Variant B')}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    thread.variantB.text,
+                                    "Variant B"
+                                  )
+                                }
                               >
                                 <Copy className="h-3 w-3" />
                               </Button>
@@ -548,10 +741,14 @@ export default function Dashboard() {
 
                           {thread.risks.length > 0 && (
                             <div>
-                              <h4 className="font-medium text-sm mb-2">Risks & Considerations</h4>
+                              <h4 className="font-medium text-sm mb-2">
+                                Risks & Considerations
+                              </h4>
                               <ul className="text-sm space-y-1">
                                 {thread.risks.map((risk, i) => (
-                                  <li key={i} className="text-orange-600">• {risk}</li>
+                                  <li key={i} className="text-orange-600">
+                                    • {risk}
+                                  </li>
                                 ))}
                               </ul>
                             </div>
@@ -561,7 +758,7 @@ export default function Dashboard() {
                     </div>
                   ))
                 )}
-                
+
                 {/* Show recent scans at bottom when there are current results */}
                 {recentSessions.length > 0 && (
                   <div className="mt-8 pt-6 border-t">
@@ -571,12 +768,16 @@ export default function Dashboard() {
                     </h3>
                     <div className="grid grid-cols-1 gap-2">
                       {recentSessions.slice(0, 3).map((session) => (
-                        <div 
-                          key={session.sessionId} 
+                        <div
+                          key={session.sessionId}
                           className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer ${
-                            session.sessionId.startsWith('sample_') ? 'bg-blue-50' : 'bg-gray-50'
+                            session.sessionId.startsWith("sample_")
+                              ? "bg-blue-50"
+                              : "bg-gray-50"
                           }`}
-                          onClick={() => handleLoadPreviousScan(session.sessionId)}
+                          onClick={() =>
+                            handleLoadPreviousScan(session.sessionId)
+                          }
                         >
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
@@ -586,15 +787,18 @@ export default function Dashboard() {
                               <Badge variant="outline" className="text-xs">
                                 {session.topScore}
                               </Badge>
-                              {session.sessionId.startsWith('sample_') && (
-                                <Badge variant="outline" className="text-xs text-blue-600">
+                              {session.sessionId.startsWith("sample_") && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs text-blue-600"
+                                >
                                   Sample
                                 </Badge>
                               )}
                             </div>
                             <div className="text-sm">
-                              r/{session.scanParams.subs.slice(0, 2).join(', ')}
-                              {session.scanParams.subs.length > 2 && '...'}
+                              r/{session.scanParams.subs.slice(0, 2).join(", ")}
+                              {session.scanParams.subs.length > 2 && "..."}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -605,7 +809,9 @@ export default function Dashboard() {
                               size="sm"
                               variant="ghost"
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                              onClick={(e) => handleDeleteSession(e, session.sessionId)}
+                              onClick={(e) =>
+                                handleDeleteSession(e, session.sessionId)
+                              }
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -627,12 +833,16 @@ export default function Dashboard() {
                     </h3>
                     <div className="space-y-3">
                       {recentSessions.map((session) => (
-                        <div 
-                          key={session.sessionId} 
+                        <div
+                          key={session.sessionId}
                           className={`border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${
-                            session.sessionId.startsWith('sample_') ? 'bg-blue-50 border-blue-200' : ''
+                            session.sessionId.startsWith("sample_")
+                              ? "bg-blue-50 border-blue-200"
+                              : ""
                           }`}
-                          onClick={() => handleLoadPreviousScan(session.sessionId)}
+                          onClick={() =>
+                            handleLoadPreviousScan(session.sessionId)
+                          }
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -643,8 +853,11 @@ export default function Dashboard() {
                                 <BarChart3 className="h-3 w-3 mr-1" />
                                 {session.topScore}
                               </Badge>
-                              {session.sessionId.startsWith('sample_') && (
-                                <Badge variant="outline" className="text-xs text-blue-600">
+                              {session.sessionId.startsWith("sample_") && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs text-blue-600"
+                                >
                                   Sample
                                 </Badge>
                               )}
@@ -657,21 +870,25 @@ export default function Dashboard() {
                                 size="sm"
                                 variant="ghost"
                                 className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                onClick={(e) => handleDeleteSession(e, session.sessionId)}
+                                onClick={(e) =>
+                                  handleDeleteSession(e, session.sessionId)
+                                }
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
                           </div>
-                          
+
                           <div className="text-sm font-medium mb-1">
-                            r/{session.scanParams.subs.slice(0, 2).join(', ')}
-                            {session.scanParams.subs.length > 2 && ` +${session.scanParams.subs.length - 2}`}
+                            r/{session.scanParams.subs.slice(0, 2).join(", ")}
+                            {session.scanParams.subs.length > 2 &&
+                              ` +${session.scanParams.subs.length - 2}`}
                           </div>
-                          
+
                           <div className="text-xs text-muted-foreground">
-                            Keywords: {session.scanParams.keywords.slice(0, 2).join(', ')}
-                            {session.scanParams.keywords.length > 2 && '...'}
+                            Keywords:{" "}
+                            {session.scanParams.keywords.slice(0, 2).join(", ")}
+                            {session.scanParams.keywords.length > 2 && "..."}
                           </div>
                         </div>
                       ))}
@@ -681,7 +898,8 @@ export default function Dashboard() {
                   <div className="text-center py-12">
                     <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">
-                      Configure your scan parameters and click "Scan Threads" to get started
+                      Configure your scan parameters and click "Scan Threads" to
+                      get started
                     </p>
                   </div>
                 )}
